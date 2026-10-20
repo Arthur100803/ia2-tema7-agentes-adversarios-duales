@@ -1,78 +1,48 @@
-# Reconstrucción temporal latente (LSTM-AE) y discriminación adversarial (LSTM–GAN) en la detección sin etiquetas de comportamientos maliciosos en series temporales de logs de servidores universitarios
+# Código del experimento
 
-**Autor:** Arturo Ruiz Tarazona — Escuela Profesional de Ingeniería de Ciberseguridad, FIEE, Universidad Nacional de Ingeniería (UNI), Lima, Perú
-**Curso:** Inteligencia Artificial II (CBS06), semestre 2026-2 — Examen Parcial, tema 7
-**Artículo:** [`articulo/articulo.pdf`](articulo/articulo.pdf) — *Reconstrucción temporal latente (LSTM-AE) y discriminación adversarial (LSTM–GAN) en la detección sin etiquetas de comportamientos maliciosos en series temporales de logs de servidores universitarios*
+Son tres scripts que se ejecutan en orden:
 
-Repositorio del experimento que compara una técnica no supervisada tradicional (Isolation Forest, pre-prueba)
-con un autocodificador LSTM de reconstrucción temporal (LSTM-AE) y su variante adversarial con discriminador (LSTM-GAN),
-entrenados **sin etiquetas** sobre registros crudos reales.
+| Paso | Script | Qué hace | Entrada | Salida |
+|---|---|---|---|---|
+| 1 | `prep.py` | Lee los logs crudos, aplica las reglas de seguridad, arma ventanas de 5 min y parsea con Drain3 | `data/` | `out/<sub>_events.parquet`, `out/<sub>_windows.csv`, `out/<sub>_templates.pkl` |
+| 2 | `experiment.py` | Entrena Isolation Forest, LSTM-AE y LSTM-GAN con 10 semillas y los evalúa | `out/` | `out/results_runs_*.csv`, `out/window_scores_*.pkl` |
+| 3 | `analyze.py` | Pruebas estadísticas, tablas y figuras | `out/` o `resultados/` | tablas `.csv`, `RESULTADOS.md` y `figs/` |
 
-## Resultados principales (tramo de prueba, 10 semillas × 3 subconjuntos)
+Los resultados que uso en el artículo están en `resultados/`. Si corres los tres scripts en orden, en `out/` salen los mismos números.
 
-| Modelo | F1 (%) | FPR (%) | AUC-ROC (%) | MCC |
-|---|---:|---:|---:|---:|
-| Isolation Forest (pre-prueba) | 25.06 | 6.27 | 86.52 | .24 |
-| **LSTM-AE (post-prueba)** | **33.56** | 3.28 | **89.04** | **.35** |
-| LSTM-GAN (post-prueba) | 32.26 | **2.88** | 85.68 | .32 |
+## Correrlo en PyCharm
 
-Wilcoxon pareado (n = 30): LSTM-AE frente a IF, F1 p < .001 (H1 aceptada) y FPR p < .001 (H2 aceptada);
-LSTM-GAN frente a LSTM-AE, F1 p = .129 y AUC p < .001 a favor del LSTM-AE (H3 aceptada).
-Detalle completo en [`resultados/RESULTADOS.md`](resultados/RESULTADOS.md).
+1. **Abrir el proyecto.** *File → Open* y elige la carpeta del repositorio (la que tiene `codigo/`, `datos/` y `resultados/`).
+2. **Intérprete.** *File → Settings → Project → Python Interpreter → Add Interpreter → Virtualenv* (Python 3.10, 3.11 o 3.12).
+3. **Librerías.** En la pestaña *Terminal* de PyCharm:
+   ```
+   pip install -r codigo/requirements.txt
+   ```
+   Si `drain3` da error: `pip install --no-deps drain3==0.9.11` y luego `pip install jsonpickle cachetools`.
+4. **Datos.** En la misma terminal (Windows 10/11 trae `tar`):
+   ```
+   mkdir data
+   mkdir data\logsapp
+   tar -xzf datos/crudos/logdb.tar.gz -C data
+   tar -xzf datos/crudos/loggit.tar.gz -C data
+   tar -xf RUTA\logsaap.zip -C data/logsapp
+   ```
+   `logsaap.zip` se descarga de la Release v1.0 del repositorio. Debe quedar `data/logpostgres`, `data/loggitlab` y `data/logsapp/logecubic`.
+5. **Ejecutar.** Clic derecho sobre el script → *Run*. Sin parámetros cada script usa valores por defecto:
 
-## Estructura
+   | Script | Sin parámetros hace | Para otro caso, en *Run → Edit Configurations → Parameters* |
+   |---|---|---|
+   | `prep.py` | `data` → `out`, los tres subconjuntos (≈10 min) | `data out logdb` (solo logdb) |
+   | `experiment.py` | `out`, 10 semillas, 30 épocas, logdb y loggit (≈35 min) | `out 10 30 logsapp` (≈70 min) · `out 1 30 logdb` (prueba de ≈4 min) |
+   | `analyze.py` | regenera las tablas de `resultados/` (≈2 min) | `out` (para analizar tu propia corrida) |
 
-```
-├── articulo/          Artículo en LaTeX (APA 7, clase apa7 + biblatex-apa), PDF y figuras
-├── codigo/            prep.py, experiment.py, analyze.py, requirements.txt
-├── datos/crudos/      Registros crudos: logdb.tar.gz, loggit.tar.gz (logsapp: ver abajo)
-├── resultados/        Datos procesados, corridas, puntuaciones, tablas y figuras
-└── fuentes/           PDF de los artículos citados (acceso abierto)
-```
+## Verificación rápida
 
-## Datos
+- **Lo más fácil:** clic derecho sobre `verificar.py` (en la raíz del repositorio) → *Run*. Hace todo solo en unos 5 minutos y marca `[OK]` o `[FALLA]`.
 
-Origen: repositorio *uni-logs* — https://uni-logs.us-mia-1.linodeobjects.com/list.html
+- **2 minutos:** corre `analyze.py` sin parámetros y compara `resultados/RESULTADOS.md` con el artículo.
+- **5 minutos:** `prep.py` con `data out logdb` y luego `experiment.py` con `out 1 30 logdb`. Debe imprimir para la semilla 0:
+  `IsolationForest (26.5, 5.1, 78.8)  LSTM-AE (32.5, 4.2, 82.9)  LSTM-GAN (33.8, 4.1, 80.1)`  (F1, FPR, AUC),
+  igual que la semilla 0 de logdb en `resultados/results_runs_logdb_loggit.csv`.
 
-| Subconjunto | Fuente | Eventos | Plantillas Drain3 | Ventanas de 5 min |
-|---|---|---:|---:|---:|
-| `logdb` | PostgreSQL 12 | 267 896 | 186 | 5 719 |
-| `loggit` | GitLab (nginx, sshd, gitlab-shell) | 56 135 | 121 | 3 398 |
-| `logsapp` | CubicERP / Odoo (server, gevent, gunicorn) | 2 893 513 | 361 | 44 299 |
-
-`logsaap.zip` (118 MB) supera el límite de 100 MB por archivo de GitHub, por lo que se publica como
-archivo adjunto de la **Release v1.0** de este repositorio (pestaña *Releases*).
-
-## Reproducción
-
-Requiere Python 3.10+ (CPU suficiente; ~105 min en 2 núcleos).
-
-```bash
-pip install -r codigo/requirements.txt
-mkdir -p data/logsapp
-tar -xzf datos/crudos/logdb.tar.gz  -C data
-tar -xzf datos/crudos/loggit.tar.gz -C data
-unzip logsaap.zip -d data/logsapp           # descargado de la Release v1.0
-
-python -I codigo/prep.py data out                       # Drain3 + ventanas + etiquetas débiles
-python -I codigo/experiment.py out 10 30 logdb,loggit   # ~35 min
-python -I codigo/experiment.py out 10 30 logsapp        # ~70 min
-python -I codigo/analyze.py out                         # tablas, pruebas estadísticas y figuras
-```
-
-Para regenerar solo tablas y figuras a partir de los resultados ya incluidos:
-
-```bash
-python -I codigo/analyze.py resultados
-```
-
-## Metodología resumida
-
-1. **Parseo** en línea con Drain3; las líneas web se codifican como `método · segmento · extensión · estado HTTP · agente`.
-2. **Ventanas** fijas de 5 min; partición cronológica 60/20/20; entrenamiento sin depurar (contiene ataques).
-3. **Etiquetas débiles** por reglas de seguridad (inyección SQL, sondeos, escaneos web, 4xx), usadas **solo para evaluar**.
-4. **Representación**: Word2Vec skip-gram (d = 300); `x_t = Σ_k log(1+c_tk)·e_k`; series de W = 20 ventanas.
-5. **Modelos**: Isolation Forest (200 árboles); LSTM-AE (128); LSTM–GAN = LSTM-AE + discriminador LSTM (64),
-   `L = 0.8·L_rec + 0.2·L_GAN`, puntuación `S = 0.7·F(e) + 0.3·(1−D)`.
-6. **Umbral**: percentil 95 de validación. **Estadística**: Wilcoxon pareado, bootstrap del AUC, sensibilidad del umbral.
-
+Pueden aparecer diferencias en el último decimal si tu procesador tiene otro número de núcleos.
