@@ -1,8 +1,8 @@
-# Agentes adversarios duales LSTM–GAN para la detección no supervisada de comportamientos maliciosos en registros de servidores universitarios
+# Modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN) para mejorar la detección de comportamientos maliciosos sin etiquetas en las series temporales de logs de la infraestructura de servidores universitarios
 
 **Autor:** Arturo Ruiz Tarazona — Escuela Profesional de Ingeniería de Ciberseguridad, FIEE, Universidad Nacional de Ingeniería (UNI), Lima, Perú
 **Curso:** Inteligencia Artificial II (CBS06), semestre 2026-2 — Examen Parcial, tema 7
-**Artículo:** [`articulo/articulo.pdf`](articulo/articulo.pdf)
+**Artículo:** [`articulo/articulo.pdf`](articulo/articulo.pdf) — *Modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN) para mejorar la detección de comportamientos maliciosos sin etiquetas en las series temporales de logs de la infraestructura de servidores universitarios*
 
 Repositorio del experimento que compara una técnica no supervisada tradicional (Isolation Forest, pre-prueba)
 con un modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN, post-prueba) y una ablación

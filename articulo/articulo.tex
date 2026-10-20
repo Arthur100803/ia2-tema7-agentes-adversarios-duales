@@ -19,6 +19,9 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{multirow}
+\usepackage{float}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
 % ---------- Bibliografía APA 7 -----------------------------------------
 \usepackage[style=apa,backend=biber]{biblatex}
@@ -35,8 +38,8 @@
 % =====================================================================
 %  PORTADA (datos del autor)
 % =====================================================================
-\title{Agentes adversarios duales LSTM--GAN para la detección no supervisada de comportamientos maliciosos en registros de servidores universitarios}
-\shorttitle{Agentes adversarios duales para detección sin etiquetas}
+\title{Modelo de agentes adversarios duales de reconstrucción latente (LSTM--GAN) para mejorar la detección de comportamientos maliciosos sin etiquetas en las series temporales de logs de la infraestructura de servidores universitarios}
+\shorttitle{Agentes adversarios duales LSTM--GAN para detección sin etiquetas}
 
 % >>> COMPLETAR: nombre completo, código y filiación institucional <<<
 \author{Arturo Ruiz Tarazona}
@@ -45,7 +48,7 @@ Universidad Nacional de Ingeniería (UNI){,} Lima{,} Perú\\
 Curso de Inteligencia Artificial II (CBS06){,} semestre 2026-2}
 \leftheader{Ruiz}
 
-\abstract{Los registros (\textit{logs}) de servidores universitarios crecen a un ritmo que impide su revisión manual y carecen de etiquetas que permitan entrenar detectores supervisados. Este estudio evalúa si un modelo de agentes adversarios duales de reconstrucción latente, un autocodificador LSTM y un discriminador secuencial que compiten en un juego \textit{minimax} (LSTM--GAN), mejora la detección de comportamientos maliciosos frente a Isolation Forest, técnica no supervisada de referencia. Se empleó un diseño cuasi-experimental con medida pre-prueba/post-prueba sobre datos reales crudos: 3\,217\,544 eventos de PostgreSQL, GitLab y un ERP en Odoo, agrupados en 53\,416 ventanas de cinco minutos mediante Drain3 y Word2Vec. Los modelos se entrenaron sin etiquetas y se evaluaron con etiquetas débiles derivadas de reglas de seguridad, con partición cronológica y diez semillas por subconjunto (30 pares). El LSTM--GAN incrementó el puntaje F1 de 25.06\,\% a 32.26\,\% ($p < .001$, $r = .85$) y redujo la tasa de falsos positivos de 6.27\,\% a 2.88\,\% ($p = .002$, $r = .58$), sin diferencia significativa en el área bajo la curva ROC (86.52\,\% frente a 85.68\,\%; $p = .529$). El análisis de ablación mostró que el autocodificador sin componente adversarial alcanza un desempeño igual o superior y más estable. Se concluye que la reconstrucción temporal de series semánticas es eficaz para reducir falsas alarmas sin datos etiquetados, mientras que la contribución del discriminador debe justificarse empíricamente en cada entorno.}
+\abstract{Los registros (\textit{logs}) de servidores universitarios crecen a un ritmo que impide su revisión manual y carecen de etiquetas que permitan entrenar detectores supervisados. Este estudio evalúa si un modelo de agentes adversarios duales de reconstrucción latente, un autocodificador LSTM y un discriminador secuencial que compiten en un juego \textit{minimax} (LSTM--GAN), mejora la detección de comportamientos maliciosos frente a Isolation Forest como línea base. Se empleó un diseño cuasi-experimental, transversal y comparativo, con medida pre-prueba/post-prueba sobre datos crudos: 3\,217\,544 eventos de PostgreSQL, GitLab y un ERP en Odoo, agrupados en 53\,416 ventanas de cinco minutos mediante Drain3 y Word2Vec. Los modelos se entrenaron sin etiquetas y se evaluaron con etiquetas débiles derivadas de reglas de seguridad, con partición cronológica y diez semillas por subconjunto (30 pares). El LSTM--GAN incrementó el puntaje F1 de 25.06\,\% a 32.26\,\% ($p < .001$, $r = .85$) y redujo la tasa de falsos positivos de 6.27\,\% a 2.88\,\% ($p = .002$, $r = .58$), sin diferencia significativa en el área bajo la curva ROC (86.52\,\% frente a 85.68\,\%; $p = .529$). El análisis de ablación mostró que el autocodificador sin componente adversarial alcanza un desempeño igual o superior y más estable. Se concluye que la reconstrucción temporal de series semánticas es eficaz para reducir falsas alarmas sin datos etiquetados, mientras que la contribución del discriminador debe justificarse empíricamente en cada entorno.}
 
 \keywords{detección de anomalías, registros del sistema, autocodificador LSTM, red generativa adversarial, aprendizaje no supervisado, ciberseguridad}
 
@@ -67,11 +70,11 @@ Curso de Inteligencia Artificial II (CBS06){,} semestre 2026-2}
 % =====================================================================
 Los sistemas informáticos registran de forma continua su actividad en archivos de \textit{logs}, que constituyen la principal fuente de evidencia para detectar fallos, usos indebidos e intrusiones. El volumen de estos registros en infraestructuras modernas hace inviable su inspección manual, y las reglas o firmas escritas a mano solo reconocen escenarios previstos de antemano, por lo que se requieren técnicas que aprendan automáticamente el comportamiento normal y señalen sus desviaciones \parencite{landauer2023}. En una universidad, un mismo conjunto de servidores aloja bases de datos académicas y administrativas, plataformas de control de versiones y aplicaciones de gestión expuestas a Internet, de modo que una intrusión en cualquiera de ellos compromete información sensible y la continuidad de los servicios.
 
-La variable dependiente de este estudio es la \textit{detección de comportamientos maliciosos}, cuya problemática presenta tres rasgos. Primero, las anomalías son raras y no se conocen de antemano, por lo que rara vez existen etiquetas para entrenar clasificadores supervisados; obtenerlas a escala industrial es costoso y debe repetirse cuando cambia el comportamiento normal \parencite{albert2025}. Segundo, los métodos no supervisados tienden a producir un número elevado de falsos positivos, lo que satura a los operadores y reduce la confianza en las alertas \parencite{zamanzadeh2024}. Tercero, buena parte de los resultados publicados se obtienen sobre unos pocos conjuntos de referencia previamente etiquetados (HDFS, BGL, Thunderbird, OpenStack), con supuestos optimistas como entrenar solo con datos normales o ajustar umbrales sobre el propio conjunto de prueba \parencite{albert2025,landauer2023}.
+La variable dependiente de este estudio es la \textit{detección de comportamientos maliciosos}, cuya problemática presenta tres rasgos. Primero, las anomalías son raras y no se conocen de antemano, por lo que rara vez existen etiquetas para entrenar clasificadores supervisados; obtenerlas a escala industrial es costoso y debe repetirse cuando cambia el comportamiento normal \parencite{albert2025}. Segundo, los métodos no supervisados tienden a producir un número elevado de falsos positivos, lo que satura a los operadores y reduce la confianza en las alertas \parencite{zamanzadeh2024}. Tercero, buena parte de los resultados publicados se obtienen sobre unos pocos conjuntos de referencia previamente etiquetados (HDFS, BGL, Thunderbird, OpenStack), con supuestos optimistas como entrenar solo con datos normales o ajustar umbrales sobre el propio conjunto de prueba \parencite{albert2025,landauer2023}. A ello se suma que elegir y ajustar un algoritmo no supervisado para un conjunto nuevo exige conocimiento experto y múltiples ensayos \parencite{zhangs2024}, y que algoritmos clásicos sencillos pueden igualar o superar a los de aprendizaje profundo \parencite{yu2024}; por ello, toda propuesta compleja debe contrastarse con una línea base tradicional.
 
 Las arquitecturas basadas en reconstrucción ofrecen una alternativa sin etiquetas: un autocodificador aprende a reconstruir el comportamiento normal y las entradas que no logra reconstruir se consideran anómalas \parencite{zamanzadeh2024}. Su combinación con redes generativas adversariales (GAN), en las que un discriminador obliga al codificador a producir representaciones latentes más fieles, ha mostrado mejoras en series temporales industriales y de Internet de las cosas \parencite{gong2023,qian2025}. Sin embargo, \textbf{el vacío} que aborda este trabajo es la ausencia de evidencia sobre el desempeño de estos agentes adversarios duales en registros \emph{crudos y heterogéneos} de infraestructura universitaria real, sin etiquetas, con partición cronológica y comparados estadísticamente con una técnica tradicional.
 
-El \textbf{propósito} del estudio es evaluar en qué medida un modelo LSTM--GAN de reconstrucción latente mejora la detección de comportamientos maliciosos sin etiquetas en registros de servidores universitarios. Los \textbf{objetivos específicos} son: (OE1) determinar su efecto sobre la exactitud de la detección (F1); (OE2) determinar su efecto sobre la tasa de falsas alarmas (FPR); y (OE3) determinar su efecto sobre la capacidad discriminante (AUC-ROC), en todos los casos frente a Isolation Forest. En coherencia, se plantea la hipótesis general de que el modelo LSTM--GAN mejora significativamente la detección y las hipótesis específicas H1 (aumenta el F1), H2 (reduce la FPR) y H3 (aumenta el AUC). La \textbf{motivación} es práctica: los equipos de seguridad universitarios disponen de abundantes registros pero no de analistas para etiquetarlos. La \textbf{importancia} radica en aportar un experimento reproducible con datos reales, que cuantifica el efecto del modelo y de su componente adversarial mediante ablación. El \textbf{aporte} incluye además una representación de ventanas de cinco minutos como series semánticas que corrige la debilidad de la reconstrucción secuencial ante ráfagas de ataque repetitivas.
+De ahí surge el \textbf{problema general}: ¿en qué medida el modelo de agentes adversarios duales de reconstrucción latente (LSTM--GAN) mejora la detección de comportamientos maliciosos sin etiquetas en las series temporales de \textit{logs} de la infraestructura de servidores universitarios? El \textbf{propósito} u objetivo general es evaluar en qué medida dicho modelo mejora esa detección frente a Isolation Forest, técnica no supervisada tradicional. Los \textbf{objetivos específicos} son determinar en qué medida el modelo (OE1) mejora la exactitud de la detección, medida con el puntaje F1; (OE2) reduce la tasa de falsas alarmas (FPR); y (OE3) mejora la capacidad discriminante entre comportamientos maliciosos y normales (AUC-ROC). En coherencia, la hipótesis general sostiene que el modelo LSTM--GAN mejora significativamente la detección de comportamientos maliciosos, y las hipótesis específicas plantean que mejora significativamente la exactitud de la detección (H1), reduce significativamente la tasa de falsas alarmas (H2) y mejora significativamente la capacidad discriminante (H3). La \textbf{motivación} es práctica: los equipos de seguridad universitarios disponen de abundantes registros pero no de analistas para etiquetarlos. La \textbf{importancia} radica en aportar un experimento reproducible con datos reales, que cuantifica el efecto del modelo y de su componente adversarial mediante ablación. El \textbf{aporte} incluye además una representación de ventanas de cinco minutos como series semánticas que corrige la debilidad de la reconstrucción secuencial ante ráfagas de ataque repetitivas.
 
 % =====================================================================
 \section{2. Revisión de la literatura}
@@ -88,10 +91,10 @@ En el plano arquitectónico, \textcite{gong2023} propusieron un autocodificador 
 \section{3. Metodología}
 % =====================================================================
 \subsection{3.1. Enfoque, tipo y diseño}
-El estudio es cuantitativo, de tipo aplicado y de nivel explicativo. Se adoptó un diseño cuasi-experimental de comparación con medida pre-prueba/post-prueba sobre las mismas unidades. La pre-prueba corresponde al desempeño de la técnica tradicional (Isolation Forest), el estímulo es la implementación del modelo LSTM--GAN y la post-prueba es el desempeño de este último sobre idénticas ventanas de evaluación. Se eligió este diseño porque permite atribuir las diferencias al modelo y no a la muestra, y porque contrastar un modelo propuesto con líneas de base sobre los mismos datos es la práctica habitual del área \parencite{landauer2023,nasirzadeh2025}. Se añadió un tercer tratamiento de ablación (LSTM-AE sin discriminador) para aislar la contribución del componente adversarial.
+El estudio es cuantitativo, de tipo aplicado y de nivel correlacional-causal, porque busca establecer el efecto de la variable independiente (el modelo LSTM--GAN) sobre la variable dependiente (la detección de comportamientos maliciosos). El diseño es cuasi-experimental, transversal y comparativo, con medida pre-prueba/post-prueba. Es cuasi-experimental porque se aplica un estímulo sin asignación aleatoria de las unidades; transversal, porque los datos corresponden a un único periodo de observación del repositorio; y comparativo, porque se contrastan dos tratamientos sobre las mismas unidades. La pre-prueba corresponde al desempeño de la técnica tradicional (Isolation Forest), el estímulo es la implementación del modelo LSTM--GAN y la post-prueba es el desempeño de este último sobre idénticas ventanas de evaluación. Isolation Forest se eligió como línea base porque los algoritmos clásicos son competitivos en la detección de anomalías en \textit{logs} \parencite{yu2024}. Se eligió este diseño porque permite atribuir las diferencias al modelo y no a la muestra, y porque contrastar un modelo propuesto con líneas de base sobre los mismos datos es la práctica habitual del área \parencite{landauer2023,nasirzadeh2025}. Se añadió un tercer tratamiento de ablación (LSTM-AE sin discriminador) para aislar la contribución del componente adversarial.
 
-\subsection{3.2. Descripción del conjunto de datos real}
-Se utilizaron registros \emph{crudos} del repositorio institucional \textit{uni-logs}, publicado por el docente (\url{https://uni-logs.us-mia-1.linodeobjects.com/list.html}). Se analizaron tres de sus cuatro subconjuntos, que se describen en la Tabla~\ref{tab:datos}:
+\subsection{3.2. Población, muestra y unidad de análisis}
+La población es finita y está constituida por la totalidad de eventos de las series temporales de \textit{logs} \emph{crudos} del repositorio institucional \textit{uni-logs}, publicado por el docente (\url{https://uni-logs.us-mia-1.linodeobjects.com/list.html}). El repositorio agrupa cuatro subconjuntos: \texttt{logdb}, \texttt{loggit}, \texttt{logsapp} y \texttt{logserver}. La muestra, no probabilística por conveniencia, comprende los tres subconjuntos procesados íntegramente en esta etapa, que se describen en la Tabla~\ref{tab:datos}. El subconjunto \texttt{logserver} no se incorporó a la muestra.
 
 \begin{itemize}
   \item \texttt{logdb}: servidor PostgreSQL 12.
@@ -99,7 +102,7 @@ Se utilizaron registros \emph{crudos} del repositorio institucional \textit{uni-
   \item \texttt{logsapp}: ERP CubicERP basado en Odoo, con registros del servidor principal, del servidor \textit{gevent} y de gunicorn.
 \end{itemize}
 
-Se excluyeron los registros de instalación del sistema operativo (\texttt{dpkg}, \texttt{apt}, \texttt{bootstrap}) por no reflejar la operación del servicio. La población la constituye la totalidad de eventos registrados; la muestra, obtenida por conveniencia, comprende 3\,217\,544 eventos agrupados en 53\,416 ventanas.
+Se excluyeron los registros de instalación del sistema operativo (\texttt{dpkg}, \texttt{apt}, \texttt{bootstrap}) por no reflejar la operación del servicio. La unidad de análisis es la ventana temporal fija de cinco minutos ($\Delta t = 5$~min), y la muestra suma 3\,217\,544 eventos agrupados en 53\,416 ventanas.
 
 % >>> Tabla 1: caracterización de los datos (valores de out/tabla_dataset.csv)
 \begin{table*}[t]
@@ -121,13 +124,13 @@ Total            &                 & 3\,217\,544 & 668 & 53\,416 &              
 \figurenote{Ventanas de cinco minutos con al menos un evento. Las ventanas maliciosas corresponden a etiquetas débiles (Tabla~\ref{tab:reglas}), usadas solo para evaluar. E = entrenamiento; V = validación; P = prueba.}
 \end{table*}
 
-\subsection{3.3. Técnicas e instrumentos de recolección}
-La técnica fue el análisis documental de registros digitales. Los instrumentos fueron tres:
+\subsection{3.3. Técnicas e instrumentos de recolección de datos}
+Se emplearon dos técnicas: la observación estructurada, basada en la minería de los \textit{logs} crudos sin etiquetar, y la simulación mediante experimentación computacional, que consiste en entrenar y evaluar los modelos sin supervisión. El instrumento es un registro de observación estructurada (Apéndice~C). Lo componen una ficha técnica y una matriz pre-prueba/post-prueba que consigna, por fuente de \textit{logs}, los valores de F1, FPR y AUC, su diferencia absoluta y su variación relativa. El registro se llena de forma automatizada con un programa en Python que integra tres herramientas:
 
 \begin{itemize}
   \item El analizador de plantillas Drain3, que separa la parte constante de cada mensaje de sus parámetros variables mediante un árbol de profundidad fija \parencite{nasirzadeh2025,zhao2025}.
-  \item Una ficha de reglas de seguridad para generar etiquetas débiles de referencia (Tabla~\ref{tab:reglas}; Apéndice~C).
-  \item Los guiones reproducibles en Python (PyTorch, scikit-learn, gensim), que registran cada corrida.
+  \item Un conjunto de reglas de seguridad que genera las etiquetas débiles de referencia (Tabla~\ref{tab:reglas}).
+  \item Las bibliotecas PyTorch, scikit-learn y gensim, con las que se entrenan los modelos y se calculan los indicadores de cada corrida.
 \end{itemize}
 
 El etiquetado por reglas o términos indicativos tiene precedente en \textcite{nasirzadeh2025}. Es pertinente aquí porque los registros no incluyen etiquetas. Las etiquetas \emph{no} se usan para entrenar ningún modelo, solo para evaluarlos.
@@ -150,13 +153,12 @@ Subconjunto & Una ventana se etiqueta como maliciosa si \ldots \\
 \end{table}
 
 \subsection{3.4. Procedimiento experimental}
-El protocolo se ejecutó en tres fases automatizadas.
+El protocolo se ejecutó en tres fases secuenciales automatizadas.
 
 \begin{itemize}
-  \item \textbf{Fase de preparación.} Se leyeron los registros, se convirtieron todas las marcas de tiempo a UTC y se unieron las líneas de continuación de trazas y sentencias SQL. Las líneas de acceso web se codificaron como \textit{método–primer segmento de ruta–extensión–estado HTTP–familia de agente}, para que Drain3 conservara la señal de ataque. Después, Drain3 se aplicó en línea, en orden cronológico, y los eventos se agruparon en ventanas fijas de cinco minutos, estrategia recomendada cuando no existen identificadores de sesión \parencite{landauer2023}.
-  \item \textbf{Partición.} Cada subconjunto se dividió cronológicamente en 60\,\% para entrenamiento, 20\,\% para validación y 20\,\% para prueba. Así se evita la fuga de información futura señalada por \textcite{albert2025}. El conjunto de entrenamiento \emph{no} se depuró, por lo que contiene 64 ventanas maliciosas; el escenario es, por tanto, genuinamente no supervisado.
-  \item \textbf{Pre-prueba y estímulo.} Isolation Forest, LSTM-AE y LSTM--GAN se entrenaron sobre las mismas ventanas, con diez semillas aleatorias por subconjunto.
-  \item \textbf{Post-prueba.} El umbral de decisión $\rho$ de cada modelo se fijó en el percentil 95 de sus puntuaciones de validación, sin intervención del tramo de prueba \parencite{albert2025,qian2025}, y se calcularon los indicadores sobre el tramo de prueba.
+  \item \textbf{Fase pre-prueba (línea base).} Se leyeron los registros, se convirtieron todas las marcas de tiempo a UTC y se unieron las líneas de continuación de trazas y sentencias SQL. Las líneas de acceso web se codificaron como \textit{método–primer segmento de ruta–extensión–estado HTTP–familia de agente}, para que Drain3 conservara la señal de ataque. Después, Drain3 se aplicó en línea, en orden cronológico, y los eventos se agruparon en ventanas fijas de cinco minutos, estrategia recomendada cuando no existen identificadores de sesión \parencite{landauer2023}. Cada subconjunto se dividió cronológicamente en 60\,\% para entrenamiento, 20\,\% para validación y 20\,\% para prueba. Así se evita la fuga de información futura señalada por \textcite{albert2025}. El conjunto de entrenamiento \emph{no} se depuró, por lo que contiene 64 ventanas maliciosas; el escenario es, por tanto, genuinamente no supervisado. Sobre estas ventanas se entrenó Isolation Forest con diez semillas aleatorias por subconjunto y se obtuvieron $F1_{pre}$, $FPR_{pre}$ y $AUC_{pre}$ frente a las etiquetas débiles.
+  \item \textbf{Fase de aplicación del estímulo.} El LSTM--GAN y su ablación LSTM-AE se entrenaron sin etiquetas sobre las mismas ventanas de entrenamiento, con las mismas diez semillas y la configuración de la Tabla~\ref{tab:hiper}.
+  \item \textbf{Fase post-prueba.} El umbral de decisión $\rho$ de cada modelo se fijó en el percentil 95 de sus puntuaciones de validación, sin intervención del tramo de prueba \parencite{albert2025,qian2025}. Con él se evaluaron las mismas ventanas de prueba, se calcularon $F1_{post}$, $FPR_{post}$ y $AUC_{post}$ y se consignaron en el registro de observación.
 \end{itemize}
 
 \subsection{3.5. Indicadores y análisis estadístico}
@@ -165,9 +167,14 @@ La exactitud se midió con el puntaje F1, la precisión y la exhaustividad; las 
 F1 = \frac{2PR}{P+R}, \qquad FPR = \frac{FP}{FP+TN}.
 \label{eq:metricas}
 \end{equation}
-El AUC-ROC es independiente del umbral, lo que lo hace adecuado para comparar puntuaciones continuas \parencite{gorokhov2023}. Para cada indicador se calcularon la media, la desviación estándar, la diferencia absoluta $\Delta = \text{post} - \text{pre}$ y la variación relativa.
+El AUC-ROC es independiente del umbral, lo que lo hace adecuado para comparar puntuaciones continuas \parencite{gorokhov2023}. Para cada indicador se calcularon la media, la desviación estándar, la diferencia absoluta $\Delta = \text{post} - \text{pre}$ y la variación relativa. Los valores se interpretan con los niveles criteriales de la matriz de operacionalización (Apéndice~A):
+\begin{itemize}
+  \item F1: bajo ($< 70$\,\%), medio (70--85\,\%) y alto ($> 85$\,\%).
+  \item FPR: crítico ($> 10$\,\%), aceptable (5--10\,\%) y óptimo ($< 5$\,\%).
+  \item AUC: débil ($< 80$\,\%), aceptable (80--90\,\%) y óptimo ($> 90$\,\%).
+\end{itemize}
 
-La prueba de Shapiro–Wilk rechazó la normalidad de las diferencias en F1, FPR y AUC ($p < .05$). Por ello, las hipótesis se contrastaron con la prueba de rangos con signo de Wilcoxon para muestras relacionadas, con $\alpha = .05$, sobre 30 pares (10 semillas $\times$ 3 subconjuntos) y por subconjunto (10 pares), con tamaño del efecto $r = Z/\sqrt{n}$. Como análisis complementario, se estimó mediante \textit{bootstrap} (2\,000 remuestreos) el intervalo de confianza al 95\,\% de la diferencia de AUC a nivel de ventana.
+La prueba de Shapiro–Wilk rechazó la normalidad de las diferencias en F1, FPR y AUC ($p < .05$). Por ello, las hipótesis se contrastaron con la prueba de rangos con signo de Wilcoxon para muestras relacionadas, con $\alpha = .05$, sobre 30 pares (10 semillas $\times$ 3 subconjuntos) y por subconjunto (10 pares), con tamaño del efecto $r = Z/\sqrt{n}$. La regla de decisión es la siguiente: para cada hipótesis específica, la hipótesis nula $H_0$ establece que no hay diferencia entre la pre-prueba y la post-prueba; si $p < .05$ y la diferencia tiene la dirección esperada, se rechaza $H_0$. Como análisis complementario, se estimó mediante \textit{bootstrap} (2\,000 remuestreos) el intervalo de confianza al 95\,\% de la diferencia de AUC a nivel de ventana.
 
 \subsection{3.6. Comparación con metodologías similares}
 El preprocesamiento sigue la cadena análisis de plantillas, representación semántica y agrupación por ventanas de \textcite{zhao2025} y \textcite{zhang2025}, que también emplean Drain y Word2Vec. El criterio de anomalía por error de reconstrucción coincide con \textcite{aslam2024} y \textcite{gong2023}. La puntuación que combina reconstrucción y discriminación procede de \textcite{qian2025}.
@@ -185,7 +192,7 @@ Los modelos se organizan jerárquicamente en tres niveles de complejidad crecien
 \label{fig:arquitectura}
 \centering
 \includegraphics[width=\columnwidth]{figs/fig0_arquitectura.pdf}
-% (Diagrama precompilado desde fig0.tex con TikZ para acelerar la compilación)
+% (Diagrama precompilado desde figs/fig0.tex con TikZ para acelerar la compilación)
 \figurenote{Elaboración propia. $F(\cdot)$ es la función de distribución empírica del error de reconstrucción en validación.}
 \end{figure}
 
@@ -214,12 +221,17 @@ El decodificador recibe $\vect{z}_t$ en cada paso y reconstruye la serie, $\hat{
 \end{equation}
 
 \subsection{4.4. Discriminador adversario secuencial}
-Siguiendo a \textcite{gong2023}, el discriminador $D$ es una LSTM de 64 unidades con salida sigmoide. Recibe la secuencia de estados ocultos $H = \vect{h}_{1:W}$ de la entrada real y la secuencia $\tilde H = \mathrm{LSTM}_{enc}(\hat X)$ obtenida al recodificar la reconstrucción, y aprende a distinguirlas. El entrenamiento alterna dos pasos:
+Siguiendo a \textcite{gong2023}, el discriminador $D$ es una LSTM de 64 unidades con salida sigmoide. Recibe la secuencia de estados ocultos $H = \vect{h}_{1:W}$ de la entrada real y la secuencia $\tilde H = \mathrm{LSTM}_{enc}(\hat X)$ obtenida al recodificar la reconstrucción, y aprende a distinguirlas. Su salida es $D(H) = \sigma(\vect{w}_d^{\top}\vect{h}^{D}_{W} + b_d)$, donde $\vect{h}^{D}_{W}$ es su último estado oculto. El generador y el discriminador compiten en el juego \textit{minimax}
+\begin{equation}
+\min_{G}\max_{D}\; V(D,G) = \mathbb{E}_{X}\!\left[\log D(H)\right] + \mathbb{E}_{X}\!\left[\log\!\left(1 - D(\tilde H)\right)\right],
+\label{eq:minimax}
+\end{equation}
+que en la práctica se optimiza alternando dos pasos:
 \begin{gather}
 \mathcal{L}_{D} = -\left[\log D(H) + \log\!\left(1 - D(\tilde H)\right)\right], \label{eq:ld}\\
 \mathcal{L}_{G} = \alpha\,\mathcal{L}_{rec} + (1-\alpha)\left[-\log D(\tilde H)\right], \label{eq:lg}
 \end{gather}
-con $\alpha = 0.8$. La ecuación~\eqref{eq:lg} obliga al generador a producir reconstrucciones cuya codificación latente sea indistinguible de la real.
+con $\alpha = 0.8$; el término adversarial de \eqref{eq:lg} es la forma no saturante de \eqref{eq:minimax}. La ecuación~\eqref{eq:lg} obliga al generador a producir reconstrucciones cuya codificación latente sea indistinguible de la real.
 
 \subsection{4.5. Puntuación dual y decisión}
 Para cada ventana se combinan el error de reconstrucción de su última posición, $e_t = \lVert \vect{x}_t - \hat{\vect{x}}_t \rVert_2^2$, y el rechazo del discriminador \parencite{qian2025}:
@@ -262,6 +274,8 @@ La Tabla~\ref{tab:resultados} y la Figura~\ref{fig:indicadores} presentan los in
 Por subconjunto, el LSTM--GAN mejoró el F1 en \texttt{logdb} (+6.95), \texttt{loggit} (+13.60) y \texttt{logsapp} (+1.03). Redujo la FPR en \texttt{logdb} ($-1.39$) y, sobre todo, en \texttt{logsapp} ($-9.53$, de 12.49\,\% a 2.95\,\%). En \texttt{loggit}, en cambio, aumentó la FPR (+0.76) y redujo el AUC ($-8.94$).
 
 El F1 de \texttt{logsapp} es bajo para todos los modelos ($< 3$\,\%) porque el tramo de prueba contiene solo 8 ventanas maliciosas entre 8\,860. Con un umbral en el percentil 95, cualquier modelo emite cientos de alertas por cada verdadero positivo.
+
+Según los niveles criteriales, el F1 consolidado de ambos modelos se ubica en el nivel bajo ($< 70$\,\%). La FPR consolidada pasa del nivel aceptable (6.27\,\%) al óptimo (2.88\,\%); en \texttt{logsapp}, pasa del nivel crítico (12.49\,\%) al óptimo (2.95\,\%). El AUC consolidado de ambos modelos se mantiene en el nivel aceptable (80--90\,\%).
 
 % >>> Tabla 4: resultados (out/tabla_descriptiva.csv)
 \begin{table*}[t]
@@ -377,21 +391,22 @@ Hubo también un caso que el modelo no detectó: una enumeración lenta de bases
 % =====================================================================
 Los resultados respaldan parcialmente la hipótesis general. Coinciden con \textcite{gong2023} y \textcite{qian2025} en que la reconstrucción temporal de series latentes supera a los métodos estáticos en exactitud. La mejora observada, de 7.2 puntos de F1 y 54\,\% menos falsas alarmas, se explica porque Isolation Forest evalúa cada ventana de forma aislada, mientras que el LSTM interpreta el volumen y la composición de los eventos dentro de su contexto de 100 minutos. Esto es especialmente relevante en \texttt{logsapp}, cuyo tráfico de \textit{longpolling} varía a lo largo del día.
 
-Sin embargo, a diferencia de \textcite{gong2023}, el componente adversarial no aportó valor sobre el autocodificador aislado e introdujo inestabilidad. Esto concuerda con las dificultades de entrenamiento de las GAN, como el desvanecimiento del gradiente y el colapso de modos, señaladas por \textcite{qian2025}. Una explicación plausible es que la contaminación del entrenamiento con ataques reales, ausente en los datos de sensores de esos estudios, lleva al discriminador a aprender también patrones maliciosos como reales.
+Sin embargo, a diferencia de \textcite{gong2023}, el componente adversarial no aportó valor sobre el autocodificador aislado e introdujo inestabilidad. Esto concuerda con las dificultades de entrenamiento de las GAN, como el desvanecimiento del gradiente y el colapso de modos, señaladas por \textcite{qian2025}. Una explicación plausible es que la contaminación del entrenamiento con ataques reales, ausente en los datos de sensores de esos estudios, lleva al discriminador a aprender también patrones maliciosos como reales. Este riesgo se relaciona con lo mostrado por \textcite{liu2023}: una GAN puede generar datos adversariales que envenenan los detectores basados en aprendizaje automático, de modo que los ataques presentes en el entrenamiento no solo degradan el modelo, sino que constituyen una superficie de ataque.
 
-La ventaja de Isolation Forest en el AUC de \texttt{loggit} confirma la advertencia de \textcite{landauer2023}: métodos simples pueden competir con el aprendizaje profundo cuando las anomalías se manifiestan como cambios de frecuencia, como ocurre con las ráfagas de escaneo web. Del mismo modo, los valores de F1 obtenidos, entre 1.9 y 62.6\,\%, son muy inferiores a los publicados sobre conjuntos de referencia, por ejemplo el 99.61\,\% de \textcite{nasirzadeh2025} o el 97.3\,\% de AUC de \textcite{gorokhov2023} en HDFS. Esta brecha es coherente con \textcite{albert2025}, quien mostró que la partición cronológica y la presencia de anomalías en el entrenamiento reducen drásticamente el desempeño reportado, y es comparable al F1 medio de 71.23\,\% de \textcite{zhao2025} en escenarios de transferencia entre sistemas.
+La ventaja de Isolation Forest en el AUC de \texttt{loggit} confirma la advertencia de \textcite{landauer2023}: métodos simples pueden competir con el aprendizaje profundo cuando las anomalías se manifiestan como cambios de frecuencia, como ocurre con las ráfagas de escaneo web. Este resultado coincide con \textcite{yu2024}, quienes hallaron que algoritmos clásicos sencillos superan a los de aprendizaje profundo en exactitud y eficiencia en cinco conjuntos públicos de \textit{logs}. Del mismo modo, los valores de F1 obtenidos, entre 1.9 y 62.6\,\%, son muy inferiores a los publicados sobre conjuntos de referencia, por ejemplo el 99.61\,\% de \textcite{nasirzadeh2025} o el 97.3\,\% de AUC de \textcite{gorokhov2023} en HDFS. Esta brecha es coherente con \textcite{albert2025}, quien mostró que la partición cronológica y la presencia de anomalías en el entrenamiento reducen drásticamente el desempeño reportado, y es comparable al F1 medio de 71.23\,\% de \textcite{zhao2025} en escenarios de transferencia entre sistemas.
 
-En un contexto más amplio, el hallazgo de mayor valor operativo es la reducción de falsas alarmas sin etiquetas. En \texttt{logsapp} equivale a unas 840 alertas falsas menos durante el periodo de prueba de 30 días, lo que alivia directamente la carga de un equipo de seguridad universitario. La omisión de la enumeración lenta ilustra el límite de los modelos de contexto fijo ante anomalías colectivas de baja intensidad \parencite{zamanzadeh2024}. A ello se suma la sensibilidad al ruido de los registros reales, documentada por \textcite{zhang2025}.
+En un contexto más amplio, el hallazgo de mayor valor operativo es la reducción de falsas alarmas sin etiquetas. En \texttt{logsapp} equivale a unas 840 alertas falsas menos durante el periodo de prueba de 30 días, lo que alivia directamente la carga de un equipo de seguridad universitario. La omisión de la enumeración lenta ilustra el límite de los modelos de contexto fijo ante anomalías colectivas de baja intensidad \parencite{zamanzadeh2024}. A ello se suma la sensibilidad al ruido de los registros reales, documentada por \textcite{zhang2025}. Por último, aunque la mejora del F1 es significativa, permanece en el nivel bajo de la escala criterial. Esto indica que, en su estado actual, el modelo es útil como filtro que prioriza alertas más que como detector autónomo.
 
 \textbf{Limitaciones.} Las etiquetas débiles, derivadas de reglas, no equivalen a una verdad de campo y pueden omitir ataques no contemplados en ellas. Se analizaron tres de los cuatro subconjuntos del repositorio. \texttt{logsapp} cuenta con muy pocas ventanas maliciosas en el tramo de prueba. Por último, no se realizó una búsqueda de hiperparámetros para evitar ajustar el modelo sobre el tramo de evaluación.
 
-\textbf{Líneas futuras.} Se proponen cinco:
+\textbf{Líneas futuras.} Se proponen seis:
 \begin{enumerate}
   \item Calibrar $\rho$ según la tasa esperada de anomalías de cada servicio \parencite{qian2025}.
   \item Emplear contextos multiescala para capturar ataques lentos.
   \item Incorporar explicabilidad para el analista \parencite{landauer2023}.
   \item Transferir el modelo entre subsistemas mediante pseudoetiquetado \parencite{zhao2025}.
   \item Fusionar las modalidades semántica y secuencial con transformadores colaborativos \parencite{nasirzadeh2025}.
+  \item Automatizar sin etiquetas la selección del modelo y de sus hiperparámetros mediante AutoML \parencite{zhangs2024}, e incorporar el subconjunto \texttt{logserver}.
 \end{enumerate}
 
 % =====================================================================
@@ -401,7 +416,7 @@ Se cumplió el propósito de evaluar el efecto del modelo de agentes adversarios
 
 \begin{itemize}
   \item \textbf{H1 se valida.} El F1 aumentó de 25.06\,\% a 32.26\,\% ($p < .001$).
-  \item \textbf{H2 se valida.} La FPR se redujo de 6.27\,\% a 2.88\,\% ($p = .002$).
+  \item \textbf{H2 se valida.} La FPR se redujo de 6.27\,\% a 2.88\,\% ($p = .002$) y pasó del nivel aceptable al óptimo.
   \item \textbf{H3 se rechaza.} El AUC no cambió de forma significativa ($p = .529$).
 \end{itemize}
 
@@ -427,78 +442,123 @@ Los aportes principales son tres: una representación de ventanas como series se
 % =====================================================================
 \onecolumn
 \appendix
+\clearpage
 \section{Matriz de operacionalización de variables}
 
 % >>> La rúbrica exige 2-4 dimensiones por variable y >= 2 indicadores por dimensión.
-\begin{table}[h]
+\begin{table}[H]
 \caption{Matriz de operacionalización}
 \label{tab:operacionalizacion}
-\small
-\begin{tabularx}{\textwidth}{@{}p{2.6cm}p{3.2cm}p{3.1cm}Xp{1.9cm}@{}}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{2.3cm}L{2.6cm}L{2.9cm}YL{3.2cm}L{1.3cm}@{}}
 \toprule
-Variable & Dimensión & Indicador & Definición operacional / fórmula & Escala \\
+Variable & Dimensión & Indicador & Definición operacional / fórmula & Niveles criteriales & Escala \\
 \midrule
-\multirow{6}{2.6cm}{\textbf{VI}: Modelo de agentes adversarios duales LSTM--GAN}
- & D1. Reconstrucción temporal & Error de reconstrucción ($\mathcal{L}_{rec}$) & Error cuadrático medio, ecuación~\eqref{eq:rec}, en validación & Razón \\
- & & Épocas hasta convergencia & Épocas hasta la parada temprana (paciencia 5) & Razón \\
- & D2. Discriminación adversarial & Pérdida del discriminador ($\mathcal{L}_D$) & Ecuación~\eqref{eq:ld} & Razón \\
- & & Probabilidad de rechazo & $1 - D(\tilde H_t)$ por ventana & Razón [0,1] \\
- & D3. Puntuación dual & Puntuación de anomalía $S_t$ & Ecuación~\eqref{eq:score} & Razón [0,1] \\
- & & Tasa de alerta & Proporción de ventanas con $S_t > \rho$ & Razón (\%) \\
+\multirow{6}{2.3cm}{\textbf{VI}: Modelo de agentes adversarios duales de reconstrucción latente (LSTM--GAN)}
+ & D1. Reconstrucción temporal del autocodificador LSTM & Error de reconstrucción ($\mathcal{L}_{rec}$) & Error cuadrático medio, ecuación~\eqref{eq:rec}, en validación & Menor es mejor & Razón \\
+ & & Épocas hasta convergencia & Épocas hasta la parada temprana (paciencia 5) & Máximo 30 & Razón \\
+ & D2. Discriminación adversarial de la GAN & Pérdida del discriminador ($\mathcal{L}_D$) & Ecuación~\eqref{eq:ld} & Mayor que 0 & Razón \\
+ & & Probabilidad de rechazo & $1 - D(\tilde H_t)$ por ventana & [0, 1] & Razón \\
+ & D3. Puntuación dual de anomalía & Puntuación de anomalía $S_t$ & Ecuación~\eqref{eq:score} & Maliciosa si $S_t > \rho$ & Razón \\
+ & & Tasa de alerta & Proporción de ventanas con $S_t > \rho$ & 5\,\% en validación & Razón \\
 \midrule
-\multirow{6}{2.6cm}{\textbf{VD}: Detección de comportamientos maliciosos}
- & D1. Exactitud de la detección & Puntaje F1 & $2PR/(P+R)$ & Razón (\%) \\
- & & Precisión ($P$) y exhaustividad ($R$) & $TP/(TP+FP)$; $TP/(TP+FN)$ & Razón (\%) \\
- & D2. Tasa de falsas alarmas & Tasa de falsos positivos (FPR) & $FP/(FP+TN)$ & Razón (\%) \\
- & & Especificidad & $TN/(TN+FP) = 1 - \mathrm{FPR}$ & Razón (\%) \\
- & D3. Capacidad discriminante & Área bajo la curva ROC (AUC) & Área bajo la curva TPR--FPR & Razón (\%) \\
- & & Coeficiente de Matthews (MCC) & Correlación entre la clase real y la predicha & Intervalo [$-1$,1] \\
+\multirow{6}{2.3cm}{\textbf{VD}: Detección de comportamientos maliciosos}
+ & D1. Exactitud de la detección & Puntaje F1 (\%) & $F1 = 2PR/(P+R) \times 100$ & Bajo $< 70$; medio 70--85; alto $> 85$ & Razón \\
+ & & Precisión ($P$) y exhaustividad ($R$) (\%) & $TP/(TP+FP)$; $TP/(TP+FN)$ & Complementario & Razón \\
+ & D2. Tasa de falsas alarmas & Tasa de falsos positivos, FPR (\%) & $FPR = FP/(FP+TN) \times 100$ & Crítico $> 10$; aceptable 5--10; óptimo $< 5$ & Razón \\
+ & & Especificidad (\%) & $TN/(TN+FP) = 100 - \mathrm{FPR}$ & Complementario & Razón \\
+ & D3. Capacidad discriminante & Área bajo la curva ROC, AUC (\%) & Pares (maliciosa, normal) correctamente ordenados / total de pares $\times 100$ & Débil $< 80$; aceptable 80--90; óptimo $> 90$ & Razón \\
+ & & Coeficiente de Matthews (MCC) & Correlación entre la clase real y la predicha & Complementario & Intervalo \\
 \bottomrule
 \end{tabularx}
-\figurenote{Instrumentos: guion \texttt{experiment.py} (VI) y matriz de confusión frente a las etiquetas débiles del Apéndice C (VD).}
+\figurenote{Instrumento: registro de observación estructurada (Apéndice~C), aplicado con el programa en Python. Las etiquetas de referencia son débiles (Tabla~\ref{tab:reglas}).}
 \end{table}
 
+\clearpage
 \section{Matriz de consistencia}
-\begin{table}[h]
+\begin{table}[H]
 \caption{Matriz de consistencia}
 \label{tab:consistencia}
 \scriptsize
-\begin{tabularx}{\textwidth}{@{}XXXp{2.9cm}p{3.1cm}@{}}
+\begin{tabularx}{\textwidth}{@{}YYYL{2.7cm}L{3.3cm}@{}}
 \toprule
-Problema & Objetivo & Hipótesis & Variables y dimensiones & Metodología \\
+Problemas & Hipótesis & Objetivos & Variables y dimensiones & Diseño metodológico \\
 \midrule
-\textbf{General:} ¿En qué medida el modelo LSTM--GAN mejora la detección de comportamientos maliciosos sin etiquetas en registros de servidores universitarios? &
-\textbf{General:} Evaluar en qué medida el modelo LSTM--GAN mejora dicha detección frente a una técnica no supervisada tradicional. &
-\textbf{General:} El modelo LSTM--GAN mejora significativamente la detección de comportamientos maliciosos. &
-\textbf{VI:} Modelo LSTM--GAN (D1 reconstrucción temporal, D2 discriminación adversarial, D3 puntuación dual). &
-\textbf{Enfoque:} cuantitativo. \textbf{Tipo:} aplicado. \textbf{Nivel:} explicativo. \textbf{Diseño:} cuasi-experimental pre-prueba/post-prueba con ablación. \\
+\textbf{General:} ¿En qué medida el modelo de agentes adversarios duales de reconstrucción latente (LSTM--GAN) mejora la detección de comportamientos maliciosos sin etiquetas en las series temporales de \textit{logs} de la infraestructura de servidores universitarios? &
+\textbf{General:} El modelo LSTM--GAN mejora significativamente la detección de comportamientos maliciosos sin etiquetas en las series temporales de \textit{logs} de la infraestructura de servidores universitarios. &
+\textbf{General:} Evaluar en qué medida el modelo LSTM--GAN mejora la detección de comportamientos maliciosos sin etiquetas en las series temporales de \textit{logs} de la infraestructura de servidores universitarios. &
+\textbf{VI:} Modelo de agentes adversarios duales de reconstrucción latente (LSTM--GAN). D1 reconstrucción temporal; D2 discriminación adversarial; D3 puntuación dual. &
+\textbf{Enfoque:} cuantitativo. \textbf{Tipo:} aplicado. \textbf{Nivel:} correlacional-causal. \textbf{Diseño:} cuasi-experimental, transversal y comparativo (pre-prueba/post-prueba). \\
 \addlinespace
-\textbf{PE1:} ¿En qué medida mejora la exactitud de la detección? &
-\textbf{OE1:} Determinar el efecto sobre el puntaje F1. &
-\textbf{H1:} El LSTM--GAN aumenta significativamente el F1. &
-\textbf{VD:} Detección de comportamientos maliciosos (D1 exactitud). &
-\textbf{Población:} eventos del repositorio \textit{uni-logs}. \textbf{Muestra:} 53\,416 ventanas de 5 min (3 subconjuntos), por conveniencia. \\
+\textbf{PE1:} ¿En qué medida el modelo LSTM--GAN mejora la exactitud de la detección de comportamientos maliciosos? &
+\textbf{H1:} El modelo LSTM--GAN mejora significativamente la exactitud de la detección. &
+\textbf{OE1:} Determinar en qué medida el modelo LSTM--GAN mejora la exactitud de la detección. &
+\textbf{VD:} Detección de comportamientos maliciosos. D1 exactitud de la detección (F1). &
+\textbf{Población:} eventos de los cuatro subconjuntos de \textit{uni-logs}. \textbf{Muestra:} \texttt{logdb}, \texttt{loggit} y \texttt{logsapp}; 53\,416 ventanas de 5 min, por conveniencia. \\
 \addlinespace
-\textbf{PE2:} ¿En qué medida reduce la tasa de falsas alarmas? &
-\textbf{OE2:} Determinar el efecto sobre la FPR. &
-\textbf{H2:} El LSTM--GAN reduce significativamente la FPR. &
-(D2 tasa de falsas alarmas) &
-\textbf{Técnica:} análisis documental. \textbf{Instrumentos:} Drain3, ficha de reglas (Apéndice C), guiones Python. \\
+\textbf{PE2:} ¿En qué medida el modelo LSTM--GAN reduce la tasa de falsas alarmas? &
+\textbf{H2:} El modelo LSTM--GAN reduce significativamente la tasa de falsas alarmas. &
+\textbf{OE2:} Determinar en qué medida el modelo LSTM--GAN reduce la tasa de falsas alarmas. &
+D2 tasa de falsas alarmas (FPR). &
+\textbf{Técnicas:} observación estructurada y simulación. \textbf{Instrumento:} registro de observación estructurada, aplicado con un programa en Python (PyTorch, scikit-learn, Drain3). \\
 \addlinespace
-\textbf{PE3:} ¿En qué medida mejora la capacidad discriminante? &
-\textbf{OE3:} Determinar el efecto sobre el AUC-ROC. &
-\textbf{H3:} El LSTM--GAN aumenta significativamente el AUC. &
-(D3 capacidad discriminante) &
-\textbf{Análisis:} estadística descriptiva; Wilcoxon pareado ($\alpha=.05$); \textit{bootstrap} del AUC. \\
+\textbf{PE3:} ¿En qué medida el modelo LSTM--GAN mejora la capacidad discriminante entre comportamientos maliciosos y normales? &
+\textbf{H3:} El modelo LSTM--GAN mejora significativamente la capacidad discriminante. &
+\textbf{OE3:} Determinar en qué medida el modelo LSTM--GAN mejora la capacidad discriminante. &
+D3 capacidad discriminante (AUC-ROC). &
+\textbf{Análisis:} estadística descriptiva e inferencial (Wilcoxon pareado, $\alpha = .05$; \textit{bootstrap} del AUC). \textbf{Procesamiento:} Python. \\
+\bottomrule
+\end{tabularx}
+\figurenote{Línea de investigación: agentes adversarios duales para detección sin etiquetas. Objeto de estudio: series temporales de \textit{logs}.}
+\end{table}
+
+\clearpage
+\section{Registro de observación estructurada}
+\begin{table}[H]
+\caption{Ficha técnica del instrumento}
+\label{tab:ficha}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{3.6cm}Y@{}}
+\toprule
+Variable evaluada & Detección de comportamientos maliciosos en series temporales de \textit{logs} (cuantitativa, escala de razón). \\
+Objetivo del instrumento & Medir y comparar la detección antes (pre-prueba, Isolation Forest) y después (post-prueba) de aplicar el modelo LSTM--GAN. \\
+Técnicas & Observación estructurada (minería de \textit{logs} crudos sin etiquetar) y simulación computacional (entrenamiento no supervisado). \\
+Herramientas de registro & Programa en Python (Drain3, PyTorch, scikit-learn); salidas \texttt{<subconjunto>\_windows.csv} y \texttt{results\_runs\_*.csv}. \\
+Unidad de análisis & Ventana temporal de 5 minutos. \\
+Referencia de evaluación & Etiquetas débiles generadas por las reglas de la Tabla~\ref{tab:reglas}, usadas solo para evaluar. \\
+Validez y confiabilidad & Las reglas se basan en indicadores inequívocos en el contexto analizado; por ejemplo, las peticiones a \texttt{.php} carecen de uso legítimo en GitLab y en Odoo. El procedimiento es determinista: la misma entrada produce las mismas etiquetas, y cada indicador se promedia sobre 10 semillas. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{Instrumento de recolección de datos}
-\textbf{C.1 Ficha de etiquetado débil por ventana.} Para cada ventana de cinco minutos se registran los campos \texttt{win} (inicio, UTC), \texttt{n\_events} (número de eventos), el conteo de cada regla de la Tabla~\ref{tab:reglas} (\texttt{sqli}, \texttt{probe}, \texttt{web}, \texttt{scan}, \texttt{ssh}, \texttt{c4xx}) y la etiqueta \texttt{y} $\in \{0,1\}$. El instrumento se aplica automáticamente con \texttt{prep.py} y su salida queda en los archivos \texttt{<subconjunto>\_windows.csv}.
-
-\textbf{C.2 Ficha de registro de resultados por corrida.} Para cada combinación de subconjunto, semilla y modelo se registran los campos \texttt{epochs}, F1, precisión, exhaustividad, FPR, AUC, MCC, TP, FP, TN y FN. La salida queda en los archivos \texttt{results\_runs\_*.csv}.
-
-\textbf{C.3 Validez y confiabilidad.} Las reglas se basan en indicadores de compromiso inequívocos en el contexto analizado: por ejemplo, las peticiones a \texttt{.php} carecen de uso legítimo en GitLab y en Odoo. La confiabilidad se garantiza porque el instrumento es determinista: la misma entrada produce siempre las mismas etiquetas.
+\begin{table}[H]
+\caption{Matriz del registro de observación estructurada (pre-prueba frente a post-prueba)}
+\label{tab:registro}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}Y>{\raggedleft\arraybackslash}p{2.6cm}>{\raggedleft\arraybackslash}p{2.6cm}>{\raggedleft\arraybackslash}p{2.6cm}>{\raggedleft\arraybackslash}p{2.6cm}@{}}
+\toprule
+Fuente de \textit{logs} / indicador & Pre-prueba (Isolation Forest) & Post-prueba (LSTM--GAN) & Diferencia absoluta (pp) & Variación relativa (\%) \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{Fuente 1: base de datos (\texttt{logdb})}} \\
+\quad Exactitud: F1 (\%) & 25.33 & 32.28 & +6.95 & +27.42 \\
+\quad Falsas alarmas: FPR (\%) & 5.57 & 4.18 & $-1.39$ & $-24.87$ \\
+\quad Capacidad discriminante: AUC (\%) & 80.15 & 81.67 & +1.52 & +1.90 \\
+\multicolumn{5}{@{}l}{\textbf{Fuente 2: control de versiones (\texttt{loggit})}} \\
+\quad Exactitud: F1 (\%) & 49.03 & 62.64 & +13.60 & +27.75 \\
+\quad Falsas alarmas: FPR (\%) & 0.74 & 1.50 & +0.76 & +102.04 \\
+\quad Capacidad discriminante: AUC (\%) & 94.44 & 85.50 & $-8.94$ & $-9.47$ \\
+\multicolumn{5}{@{}l}{\textbf{Fuente 3: aplicaciones (\texttt{logsapp})}} \\
+\quad Exactitud: F1 (\%) & 0.82 & 1.85 & +1.03 & +125.32 \\
+\quad Falsas alarmas: FPR (\%) & 12.49 & 2.95 & $-9.53$ & $-76.34$ \\
+\quad Capacidad discriminante: AUC (\%) & 84.97 & 89.88 & +4.91 & +5.78 \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{Totales consolidados}} \\
+\quad Exactitud total: F1 (\%) & 25.06 & 32.26 & +7.19 & +28.71 \\
+\quad Falsas alarmas total: FPR (\%) & 6.27 & 2.88 & $-3.39$ & $-54.04$ \\
+\quad Capacidad discriminante total: AUC (\%) & 86.52 & 85.68 & $-0.84$ & $-0.97$ \\
+\bottomrule
+\end{tabularx}
+\figurenote{Código de experimento: EXP-2026-LOG-001. Investigador: Arturo Ruiz Tarazona. Valores medios de 10 semillas en el tramo de prueba. Los totales consolidados son el promedio de las tres fuentes (30 corridas). pp = puntos porcentuales.}
+\end{table}
 
 \end{document}
