@@ -76,7 +76,3 @@ python -I codigo/analyze.py resultados
    `L = 0.8·L_rec + 0.2·L_GAN`, puntuación `S = 0.7·F(e) + 0.3·(1−D)`.
 6. **Umbral**: percentil 95 de validación. **Estadística**: Wilcoxon pareado, bootstrap del AUC, sensibilidad del umbral.
 
-## Compilar el artículo
-
-Subir la carpeta `articulo/` a Overleaf (pdfLaTeX + Biber) o compilar localmente:
-`pdflatex articulo && biber articulo && pdflatex articulo && pdflatex articulo`.
