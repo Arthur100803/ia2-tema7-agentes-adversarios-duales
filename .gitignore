@@ -1,0 +1,14 @@
+data/
+out/
+__pycache__/
+*.pyc
+*.aux
+*.log
+!resultados/*.log
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.out
+*.synctex.gz
+logsaap.zip

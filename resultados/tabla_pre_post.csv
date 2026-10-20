@@ -1,0 +1,13 @@
+subconjunto,indicador,pre,post,delta,delta_pct
+logdb,F1,25.33,32.28,6.95,27.42
+logdb,FPR,5.57,4.18,-1.39,-24.87
+logdb,AUC,80.15,81.67,1.52,1.9
+loggit,F1,49.03,62.64,13.6,27.75
+loggit,FPR,0.74,1.5,0.76,102.04
+loggit,AUC,94.44,85.5,-8.94,-9.47
+logsapp,F1,0.82,1.85,1.03,125.32
+logsapp,FPR,12.49,2.95,-9.53,-76.34
+logsapp,AUC,84.97,89.88,4.91,5.78
+consolidado,F1,25.06,32.26,7.19,28.71
+consolidado,FPR,6.27,2.88,-3.39,-54.04
+consolidado,AUC,86.52,85.68,-0.84,-0.97

@@ -1,0 +1,4 @@
+subconjunto,eventos,plantillas,ventanas,desde,hasta,ventanas_train,ventanas_val,ventanas_test,maliciosas_train,maliciosas_val,maliciosas_test,reglas_activadas
+logdb,267896,186,5719,2026-03-01 05:13,2026-05-12 21:40,3431,1144,1144,2,1,90,"{""sqli"": 27, ""probe"": 148}"
+loggit,56135,121,3398,2025-10-30 00:44,2026-05-12 10:07,2038,680,680,38,28,21,"{""web"": 86, ""scan"": 0, ""ssh"": 0, ""c4xx"": 53}"
+logsapp,2893513,361,44299,2025-11-20 05:49,2026-05-12 21:41,26579,8860,8860,24,2,8,"{""web"": 33, ""c4xx"": 819}"

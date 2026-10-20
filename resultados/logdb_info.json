@@ -1,0 +1,1 @@
+{"n_win": 5719, "split": {"train": 3431, "val": 1144, "test": 1144}, "mal": {"train": 2, "val": 1, "test": 90}, "n_templates": 186}

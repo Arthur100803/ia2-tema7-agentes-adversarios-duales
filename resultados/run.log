@@ -1,0 +1,22 @@
+logdb {'n_win': 5719, 'split': {'train': 3431, 'val': 1144, 'test': 1144}, 'mal': {'train': 2, 'val': 1, 'test': 90}, 'n_templates': 186}
+logdb 0 134s {'IsolationForest': (26.5, np.float64(5.1), 78.8), 'LSTM-AE': (32.5, np.float64(4.2), 82.9), 'LSTM-GAN': (33.8, np.float64(4.1), 80.1)}
+logdb 1 135s {'IsolationForest': (26.3, np.float64(5.9), 81.3), 'LSTM-AE': (33.3, np.float64(4.3), 83.3), 'LSTM-GAN': (31.6, np.float64(3.6), 81.3)}
+logdb 2 136s {'IsolationForest': (25.7, np.float64(5.6), 80.6), 'LSTM-AE': (33.3, np.float64(4.3), 82.2), 'LSTM-GAN': (34.1, np.float64(4.4), 80.5)}
+logdb 3 137s {'IsolationForest': (23.2, np.float64(5.2), 78.0), 'LSTM-AE': (30.7, np.float64(4.6), 80.7), 'LSTM-GAN': (31.2, np.float64(4.3), 81.5)}
+logdb 4 134s {'IsolationForest': (23.3, np.float64(5.9), 79.2), 'LSTM-AE': (30.6, np.float64(5.1), 84.5), 'LSTM-GAN': (30.4, np.float64(4.2), 77.4)}
+logdb 5 130s {'IsolationForest': (24.7, np.float64(5.6), 78.6), 'LSTM-AE': (32.3, np.float64(4.3), 84.2), 'LSTM-GAN': (32.7, np.float64(4.1), 83.8)}
+logdb 6 130s {'IsolationForest': (29.8, np.float64(6.1), 81.8), 'LSTM-AE': (35.3, np.float64(3.4), 85.5), 'LSTM-GAN': (31.7, np.float64(4.6), 84.3)}
+logdb 7 131s {'IsolationForest': (23.8, np.float64(5.5), 80.4), 'LSTM-AE': (33.3, np.float64(3.8), 84.2), 'LSTM-GAN': (31.5, np.float64(4.6), 83.6)}
+logdb 8 129s {'IsolationForest': (25.0, np.float64(5.4), 80.8), 'LSTM-AE': (33.8, np.float64(3.6), 85.7), 'LSTM-GAN': (34.2, np.float64(3.4), 80.6)}
+logdb 9 128s {'IsolationForest': (25.0, np.float64(5.4), 81.9), 'LSTM-AE': (33.8, np.float64(4.1), 85.5), 'LSTM-GAN': (31.5, np.float64(4.6), 83.5)}
+loggit {'n_win': 3398, 'split': {'train': 2038, 'val': 680, 'test': 680}, 'mal': {'train': 38, 'val': 28, 'test': 21}, 'n_templates': 121}
+loggit 0 76s {'IsolationForest': (55.6, np.float64(0.8), 94.6), 'LSTM-AE': (68.6, np.float64(0.3), 85.4), 'LSTM-GAN': (72.2, np.float64(0.3), 86.3)}
+loggit 1 76s {'IsolationForest': (47.1, np.float64(0.8), 94.7), 'LSTM-AE': (60.6, np.float64(0.3), 87.6), 'LSTM-GAN': (74.3, np.float64(0.2), 87.1)}
+loggit 2 75s {'IsolationForest': (45.2, np.float64(0.5), 94.2), 'LSTM-AE': (64.7, np.float64(0.3), 86.4), 'LSTM-GAN': (60.0, np.float64(1.1), 84.6)}
+loggit 3 78s {'IsolationForest': (62.9, np.float64(0.5), 95.3), 'LSTM-AE': (60.6, np.float64(0.3), 86.8), 'LSTM-GAN': (68.6, np.float64(0.3), 86.9)}
+loggit 4 77s {'IsolationForest': (52.9, np.float64(0.6), 94.7), 'LSTM-AE': (68.6, np.float64(0.3), 86.2), 'LSTM-GAN': (56.0, np.float64(2.3), 85.0)}
+loggit 5 77s {'IsolationForest': (41.0, np.float64(1.5), 94.6), 'LSTM-AE': (68.6, np.float64(0.3), 86.0), 'LSTM-GAN': (48.4, np.float64(3.9), 83.6)}
+loggit 6 77s {'IsolationForest': (50.0, np.float64(0.5), 94.2), 'LSTM-AE': (68.6, np.float64(0.3), 86.5), 'LSTM-GAN': (62.2, np.float64(1.5), 86.5)}
+loggit 7 75s {'IsolationForest': (45.7, np.float64(0.9), 94.2), 'LSTM-AE': (68.6, np.float64(0.3), 88.0), 'LSTM-GAN': (61.2, np.float64(2.0), 85.6)}
+loggit 8 75s {'IsolationForest': (50.0, np.float64(0.5), 94.0), 'LSTM-AE': (60.6, np.float64(0.3), 86.5), 'LSTM-GAN': (62.2, np.float64(1.5), 84.7)}
+loggit 9 77s {'IsolationForest': (40.0, np.float64(1.1), 93.8), 'LSTM-AE': (60.6, np.float64(0.3), 87.4), 'LSTM-GAN': (61.2, np.float64(2.0), 84.6)}

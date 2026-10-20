@@ -1,0 +1,4 @@
+subconjunto,auc_IF,auc_GAN,dif,IC95_inf,IC95_sup
+logdb,81.05,82.78,1.71,-0.57,4.07
+loggit,94.51,85.76,-8.87,-19.85,-0.62
+logsapp,85.31,93.57,8.36,2.21,15.48
