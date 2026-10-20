@@ -1,22 +1,23 @@
-# Modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN) para mejorar la detección de comportamientos maliciosos sin etiquetas en las series temporales de logs de la infraestructura de servidores universitarios
+# Reconstrucción temporal latente (LSTM-AE) y discriminación adversarial (LSTM–GAN) en la detección sin etiquetas de comportamientos maliciosos en series temporales de logs de servidores universitarios
 
 **Autor:** Arturo Ruiz Tarazona — Escuela Profesional de Ingeniería de Ciberseguridad, FIEE, Universidad Nacional de Ingeniería (UNI), Lima, Perú
 **Curso:** Inteligencia Artificial II (CBS06), semestre 2026-2 — Examen Parcial, tema 7
-**Artículo:** [`articulo/articulo.pdf`](articulo/articulo.pdf) — *Modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN) para mejorar la detección de comportamientos maliciosos sin etiquetas en las series temporales de logs de la infraestructura de servidores universitarios*
+**Artículo:** [`articulo/articulo.pdf`](articulo/articulo.pdf) — *Reconstrucción temporal latente (LSTM-AE) y discriminación adversarial (LSTM–GAN) en la detección sin etiquetas de comportamientos maliciosos en series temporales de logs de servidores universitarios*
 
 Repositorio del experimento que compara una técnica no supervisada tradicional (Isolation Forest, pre-prueba)
-con un modelo de agentes adversarios duales de reconstrucción latente (LSTM–GAN, post-prueba) y una ablación
-(LSTM-AE sin discriminador), entrenados **sin etiquetas** sobre registros crudos reales.
+con un autocodificador LSTM de reconstrucción temporal (LSTM-AE) y su variante adversarial con discriminador (LSTM-GAN),
+entrenados **sin etiquetas** sobre registros crudos reales.
 
 ## Resultados principales (tramo de prueba, 10 semillas × 3 subconjuntos)
 
 | Modelo | F1 (%) | FPR (%) | AUC-ROC (%) | MCC |
 |---|---:|---:|---:|---:|
 | Isolation Forest (pre-prueba) | 25.06 | 6.27 | 86.52 | .24 |
-| LSTM-AE (ablación) | 33.56 | 3.28 | 89.04 | .35 |
-| **LSTM–GAN (post-prueba)** | **32.26** | **2.88** | 85.68 | .32 |
+| **LSTM-AE (post-prueba)** | **33.56** | 3.28 | **89.04** | **.35** |
+| LSTM-GAN (post-prueba) | 32.26 | **2.88** | 85.68 | .32 |
 
-Wilcoxon pareado (n = 30): F1 p < .001 (H1 aceptada), FPR p = .002 (H2 aceptada), AUC p = .529 (H3 rechazada).
+Wilcoxon pareado (n = 30): LSTM-AE frente a IF, F1 p < .001 (H1 aceptada) y FPR p < .001 (H2 aceptada);
+LSTM-GAN frente a LSTM-AE, F1 p = .129 y AUC p < .001 a favor del LSTM-AE (H3 aceptada).
 Detalle completo en [`resultados/RESULTADOS.md`](resultados/RESULTADOS.md).
 
 ## Estructura

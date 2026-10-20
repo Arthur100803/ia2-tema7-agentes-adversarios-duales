@@ -11,46 +11,80 @@
 | ('logsapp', 'LSTM-AE')         |            2.808 |           0.153 |             5.394 |            0.493 |            96.544 |            0.357 |           1.427 |          0.079 |          86.25  |          7.096 |             0.107 |            0.006 |                 23.2 |               8.443 |
 | ('logsapp', 'LSTM-GAN')        |            1.854 |           1.093 |             2.954 |            1.432 |            89.881 |            7.507 |           0.958 |          0.562 |          33.75  |         27.67  |             0.051 |            0.037 |                 22.7 |               8.706 |
 
-## Pre-prueba (IF) vs post-prueba (LSTM-GAN)
-| subconjunto   | indicador   |   pre |   post |   delta |   delta_pct |
-|:--------------|:------------|------:|-------:|--------:|------------:|
-| logdb         | F1          | 25.33 |  32.28 |    6.95 |       27.42 |
-| logdb         | FPR         |  5.57 |   4.18 |   -1.39 |      -24.87 |
-| logdb         | AUC         | 80.15 |  81.67 |    1.52 |        1.9  |
-| loggit        | F1          | 49.03 |  62.64 |   13.6  |       27.75 |
-| loggit        | FPR         |  0.74 |   1.5  |    0.76 |      102.04 |
-| loggit        | AUC         | 94.44 |  85.5  |   -8.94 |       -9.47 |
-| logsapp       | F1          |  0.82 |   1.85 |    1.03 |      125.32 |
-| logsapp       | FPR         | 12.49 |   2.95 |   -9.53 |      -76.34 |
-| logsapp       | AUC         | 84.97 |  89.88 |    4.91 |        5.78 |
-| consolidado   | F1          | 25.06 |  32.26 |    7.19 |       28.71 |
-| consolidado   | FPR         |  6.27 |   2.88 |   -3.39 |      -54.04 |
-| consolidado   | AUC         | 86.52 |  85.68 |   -0.84 |       -0.97 |
+## Pre-prueba (IF) vs post-prueba (LSTM-AE, LSTM-GAN)
+| modelo_post   | subconjunto   | indicador   |   pre |   post |   delta |   delta_pct |
+|:--------------|:--------------|:------------|------:|-------:|--------:|------------:|
+| LSTM-AE       | logdb         | F1          | 25.33 |  32.89 |    7.56 |       29.84 |
+| LSTM-AE       | logdb         | FPR         |  5.57 |   4.16 |   -1.41 |      -25.38 |
+| LSTM-AE       | logdb         | AUC         | 80.15 |  83.88 |    3.74 |        4.66 |
+| LSTM-AE       | loggit        | F1          | 49.03 |  65    |   15.97 |       32.57 |
+| LSTM-AE       | loggit        | FPR         |  0.74 |   0.3  |   -0.44 |      -59.18 |
+| LSTM-AE       | loggit        | AUC         | 94.44 |  86.7  |   -7.74 |       -8.2  |
+| LSTM-AE       | logsapp       | F1          |  0.82 |   2.81 |    1.98 |      241.16 |
+| LSTM-AE       | logsapp       | FPR         | 12.49 |   5.39 |   -7.09 |      -56.8  |
+| LSTM-AE       | logsapp       | AUC         | 84.97 |  96.54 |   11.58 |       13.63 |
+| LSTM-AE       | consolidado   | F1          | 25.06 |  33.56 |    8.5  |       33.93 |
+| LSTM-AE       | consolidado   | FPR         |  6.27 |   3.28 |   -2.98 |      -47.59 |
+| LSTM-AE       | consolidado   | AUC         | 86.52 |  89.04 |    2.52 |        2.92 |
+| LSTM-GAN      | logdb         | F1          | 25.33 |  32.28 |    6.95 |       27.42 |
+| LSTM-GAN      | logdb         | FPR         |  5.57 |   4.18 |   -1.39 |      -24.87 |
+| LSTM-GAN      | logdb         | AUC         | 80.15 |  81.67 |    1.52 |        1.9  |
+| LSTM-GAN      | loggit        | F1          | 49.03 |  62.64 |   13.6  |       27.75 |
+| LSTM-GAN      | loggit        | FPR         |  0.74 |   1.5  |    0.76 |      102.04 |
+| LSTM-GAN      | loggit        | AUC         | 94.44 |  85.5  |   -8.94 |       -9.47 |
+| LSTM-GAN      | logsapp       | F1          |  0.82 |   1.85 |    1.03 |      125.32 |
+| LSTM-GAN      | logsapp       | FPR         | 12.49 |   2.95 |   -9.53 |      -76.34 |
+| LSTM-GAN      | logsapp       | AUC         | 84.97 |  89.88 |    4.91 |        5.78 |
+| LSTM-GAN      | consolidado   | F1          | 25.06 |  32.26 |    7.19 |       28.71 |
+| LSTM-GAN      | consolidado   | FPR         |  6.27 |   2.88 |   -3.39 |      -54.04 |
+| LSTM-GAN      | consolidado   | AUC         | 86.52 |  85.68 |   -0.84 |       -0.97 |
 
 ## Pruebas pareadas
-| comparacion                    | indicador   |   n_pares |   media_dif |   de_dif |   shapiro_p |   wilcoxon_W |   wilcoxon_p |   r_efecto |      t |         t_p |
-|:-------------------------------|:------------|----------:|------------:|---------:|------------:|-------------:|-------------:|-----------:|-------:|------------:|
-| LSTM-GAN vs IF                 | F1          |        30 |       7.194 |    6.734 |      0.0047 |          6   |  3.17978e-06 |      0.851 |  5.851 | 2.39614e-06 |
-| LSTM-GAN vs IF                 | FPR         |        30 |      -3.387 |    4.657 |      0.0006 |         79   |  0.00159225  |      0.576 | -3.983 | 0.000418429 |
-| LSTM-GAN vs IF                 | AUC         |        30 |      -0.835 |    7.568 |      0.0162 |        201   |  0.529105    |      0.115 | -0.604 | 0.550336    |
-| LSTM-GAN vs IF                 | MCC         |        30 |       0.074 |    0.07  |      0.0627 |         24   |  1.79793e-05 |      0.783 |  5.829 | 2.54978e-06 |
-| LSTM-GAN vs LSTM-AE (ablacion) | F1          |        30 |      -1.309 |    5.71  |      0.0005 |        158   |  0.129353    |      0.277 | -1.256 | 0.219225    |
-| LSTM-GAN vs LSTM-AE (ablacion) | FPR         |        30 |      -0.404 |    1.839 |      0.4482 |        158.5 |  0.310856    |      0.185 | -1.204 | 0.238216    |
-| LSTM-GAN vs LSTM-AE (ablacion) | AUC         |        30 |      -3.36  |    5.1   |      0      |         18   |  4.71249e-07 |      0.92  | -3.608 | 0.00114626  |
-| LSTM-GAN vs LSTM-AE (ablacion) | MCC         |        30 |      -0.033 |    0.064 |      0.3447 |         89   |  0.00236749  |      0.555 | -2.84  | 0.00815493  |
+| comparacion              | indicador   |   n_pares |   media_dif |   de_dif |   shapiro_p |   wilcoxon_W |   wilcoxon_p |   r_efecto |      t |         t_p |
+|:-------------------------|:------------|----------:|------------:|---------:|------------:|-------------:|-------------:|-----------:|-------:|------------:|
+| LSTM-AE vs IF (H1, H2)   | F1          |        30 |       8.503 |    7.436 |      0.0078 |         10   |  8.00937e-08 |      0.836 |  6.264 | 7.74788e-07 |
+| LSTM-AE vs IF (H1, H2)   | FPR         |        30 |      -2.982 |    3.112 |      0.0001 |          0   |  1.71809e-06 |      0.873 | -5.25  | 1.26681e-05 |
+| LSTM-AE vs IF (H1, H2)   | AUC         |        30 |       2.525 |    8.176 |      0.0039 |        155   |  0.114177    |      0.291 |  1.691 | 0.101495    |
+| LSTM-AE vs IF (H1, H2)   | MCC         |        30 |       0.107 |    0.065 |      0.0009 |          1   |  3.72529e-09 |      0.869 |  9.041 | 6.16525e-10 |
+| LSTM-GAN vs LSTM-AE (H3) | F1          |        30 |      -1.309 |    5.71  |      0.0005 |        158   |  0.129353    |      0.28  | -1.256 | 0.219225    |
+| LSTM-GAN vs LSTM-AE (H3) | FPR         |        30 |      -0.404 |    1.839 |      0.4482 |        158.5 |  0.310856    |      0.185 | -1.204 | 0.238216    |
+| LSTM-GAN vs LSTM-AE (H3) | AUC         |        30 |      -3.36  |    5.1   |      0      |         18   |  4.71249e-07 |      0.806 | -3.608 | 0.00114626  |
+| LSTM-GAN vs LSTM-AE (H3) | MCC         |        30 |      -0.033 |    0.064 |      0.3447 |         89   |  0.00236749  |      0.539 | -2.84  | 0.00815493  |
+| LSTM-GAN vs IF           | F1          |        30 |       7.194 |    6.734 |      0.0047 |          6   |  3.17978e-06 |      0.851 |  5.851 | 2.39614e-06 |
+| LSTM-GAN vs IF           | FPR         |        30 |      -3.387 |    4.657 |      0.0006 |         79   |  0.00159225  |      0.576 | -3.983 | 0.000418429 |
+| LSTM-GAN vs IF           | AUC         |        30 |      -0.835 |    7.568 |      0.0162 |        201   |  0.529105    |      0.118 | -0.604 | 0.550336    |
+| LSTM-GAN vs IF           | MCC         |        30 |       0.074 |    0.07  |      0.0627 |         24   |  1.79793e-05 |      0.783 |  5.829 | 2.54978e-06 |
 
-## Wilcoxon por subconjunto (IF vs LSTM-GAN)
-| subconjunto   | indicador   |   media_IF |   media_GAN |   wilcoxon_W |      p |
-|:--------------|:------------|-----------:|------------:|-------------:|-------:|
-| logdb         | F1          |      25.33 |       32.28 |            0 | 0.002  |
-| logdb         | FPR         |       5.57 |        4.18 |            0 | 0.002  |
-| logdb         | AUC         |      80.15 |       81.67 |           11 | 0.1055 |
-| loggit        | F1          |      49.03 |       62.64 |            0 | 0.002  |
-| loggit        | FPR         |       0.74 |        1.5  |            7 | 0.0352 |
-| loggit        | AUC         |      94.44 |       85.5  |            0 | 0.002  |
-| logsapp       | F1          |       0.82 |        1.85 |            6 | 0.0273 |
-| logsapp       | FPR         |      12.49 |        2.95 |            0 | 0.002  |
-| logsapp       | AUC         |      84.97 |       89.88 |           13 | 0.1602 |
+## Wilcoxon por subconjunto
+| comparacion                 | subconjunto   | indicador   |   media_a |   media_b |   wilcoxon_W |      p |
+|:----------------------------|:--------------|:------------|----------:|----------:|-------------:|-------:|
+| LSTM-AE vs IsolationForest  | logdb         | F1          |     25.33 |     32.89 |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | logdb         | FPR         |      5.57 |      4.16 |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | logdb         | AUC         |     80.15 |     83.88 |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | loggit        | F1          |     49.03 |     65    |          1   | 0.0039 |
+| LSTM-AE vs IsolationForest  | loggit        | FPR         |      0.74 |      0.3  |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | loggit        | AUC         |     94.44 |     86.7  |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | logsapp       | F1          |      0.82 |      2.81 |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | logsapp       | FPR         |     12.49 |      5.39 |          0   | 0.002  |
+| LSTM-AE vs IsolationForest  | logsapp       | AUC         |     84.97 |     96.54 |          0   | 0.002  |
+| LSTM-GAN vs LSTM-AE         | logdb         | F1          |     32.89 |     32.28 |         20   | 0.4922 |
+| LSTM-GAN vs LSTM-AE         | logdb         | FPR         |      4.16 |      4.18 |         25.5 | 0.8652 |
+| LSTM-GAN vs LSTM-AE         | logdb         | AUC         |     83.88 |     81.67 |          3   | 0.0098 |
+| LSTM-GAN vs LSTM-AE         | loggit        | F1          |     65    |     62.64 |         22   | 0.625  |
+| LSTM-GAN vs LSTM-AE         | loggit        | FPR         |      0.3  |      1.5  |          1   | 0.0156 |
+| LSTM-GAN vs LSTM-AE         | loggit        | AUC         |     86.7  |     85.5  |          7   | 0.0371 |
+| LSTM-GAN vs LSTM-AE         | logsapp       | F1          |      2.81 |      1.85 |          6   | 0.0273 |
+| LSTM-GAN vs LSTM-AE         | logsapp       | FPR         |      5.39 |      2.95 |          1   | 0.0039 |
+| LSTM-GAN vs LSTM-AE         | logsapp       | AUC         |     96.54 |     89.88 |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | logdb         | F1          |     25.33 |     32.28 |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | logdb         | FPR         |      5.57 |      4.18 |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | logdb         | AUC         |     80.15 |     81.67 |         11   | 0.1055 |
+| LSTM-GAN vs IsolationForest | loggit        | F1          |     49.03 |     62.64 |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | loggit        | FPR         |      0.74 |      1.5  |          7   | 0.0352 |
+| LSTM-GAN vs IsolationForest | loggit        | AUC         |     94.44 |     85.5  |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | logsapp       | F1          |      0.82 |      1.85 |          6   | 0.0273 |
+| LSTM-GAN vs IsolationForest | logsapp       | FPR         |     12.49 |      2.95 |          0   | 0.002  |
+| LSTM-GAN vs IsolationForest | logsapp       | AUC         |     84.97 |     89.88 |         13   | 0.1602 |
 
 ## Sensibilidad al umbral (media de semillas)
 | subconjunto   | modelo          |   percentil |    F1 |   FPR |   Recall |
@@ -83,12 +117,15 @@
 | logsapp       | LSTM-GAN        |        99   |  1.11 |  0.61 |     6.25 |
 | logsapp       | LSTM-GAN        |        99.9 |  0    |  0.04 |     0    |
 
-## Bootstrap dif. AUC (GAN - IF)
-| subconjunto   |   auc_IF |   auc_GAN |   dif |   IC95_inf |   IC95_sup |
-|:--------------|---------:|----------:|------:|-----------:|-----------:|
-| logdb         |    81.05 |     82.78 |  1.71 |      -0.57 |       4.07 |
-| loggit        |    94.51 |     85.76 | -8.87 |     -19.85 |      -0.62 |
-| logsapp       |    85.31 |     93.57 |  8.36 |       2.21 |      15.48 |
+## Bootstrap dif. AUC
+| comparacion               | subconjunto   |   auc_a |   auc_b |   dif |   IC95_inf |   IC95_sup |
+|:--------------------------|:--------------|--------:|--------:|------:|-----------:|-----------:|
+| LSTM-AE - IsolationForest | logdb         |   81.05 |   84.7  |  3.63 |       1.48 |       5.93 |
+| LSTM-GAN - LSTM-AE        | logdb         |   84.7  |   82.78 | -1.91 |      -2.79 |      -1.12 |
+| LSTM-AE - IsolationForest | loggit        |   94.51 |   86.48 | -8.22 |     -18.84 |      -0.3  |
+| LSTM-GAN - LSTM-AE        | loggit        |   86.48 |   85.76 | -0.7  |      -2.95 |       0.76 |
+| LSTM-AE - IsolationForest | logsapp       |   85.31 |   96.9  | 11.81 |       5.71 |      19.8  |
+| LSTM-GAN - LSTM-AE        | logsapp       |   96.9  |   93.57 | -3.35 |      -4.92 |      -1.44 |
 
 ## Dataset
 |                  | 0                          | 1                                            | 2                        |

@@ -1,4 +1,7 @@
-subconjunto,auc_IF,auc_GAN,dif,IC95_inf,IC95_sup
-logdb,81.05,82.78,1.71,-0.57,4.07
-loggit,94.51,85.76,-8.87,-19.85,-0.62
-logsapp,85.31,93.57,8.36,2.21,15.48
+comparacion,subconjunto,auc_a,auc_b,dif,IC95_inf,IC95_sup
+LSTM-AE - IsolationForest,logdb,81.05,84.7,3.63,1.48,5.93
+LSTM-GAN - LSTM-AE,logdb,84.7,82.78,-1.91,-2.79,-1.12
+LSTM-AE - IsolationForest,loggit,94.51,86.48,-8.22,-18.84,-0.3
+LSTM-GAN - LSTM-AE,loggit,86.48,85.76,-0.7,-2.95,0.76
+LSTM-AE - IsolationForest,logsapp,85.31,96.9,11.81,5.71,19.8
+LSTM-GAN - LSTM-AE,logsapp,96.9,93.57,-3.35,-4.92,-1.44

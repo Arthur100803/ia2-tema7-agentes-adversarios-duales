@@ -18,15 +18,16 @@ md = []
 desc = R.groupby(["subset", "model"])[["F1", "FPR", "AUC", "P", "R", "MCC", "epochs"]].agg(["mean", "std"]).round(3)
 desc.to_csv(f"{OUT}/tabla_descriptiva.csv"); md += ["## Tabla descriptiva (media y DE sobre 10 semillas)", desc.to_markdown(), ""]
 
-# 2. Pre (IF) vs Post (LSTM-GAN): diferencias absolutas y relativas
+# 2. Pre-prueba (IF) vs post-prueba (LSTM-AE y LSTM-GAN): diferencias absolutas y relativas
 rows = []
-for sub in SUBS + ["consolidado"]:
-    q = R if sub == "consolidado" else R[R.subset == sub]
-    for ind in IND:
-        pre = q[q.model == "IsolationForest"][ind].mean(); post = q[q.model == "LSTM-GAN"][ind].mean()
-        rows.append(dict(subconjunto=sub, indicador=ind, pre=round(pre, 2), post=round(post, 2),
-                         delta=round(post - pre, 2), delta_pct=round(100 * (post - pre) / pre, 2)))
-dd = pd.DataFrame(rows); dd.to_csv(f"{OUT}/tabla_pre_post.csv", index=False); md += ["## Pre-prueba (IF) vs post-prueba (LSTM-GAN)", dd.to_markdown(index=False), ""]
+for post_m in ["LSTM-AE", "LSTM-GAN"]:
+    for sub in SUBS + ["consolidado"]:
+        q = R if sub == "consolidado" else R[R.subset == sub]
+        for ind in IND:
+            pre = q[q.model == "IsolationForest"][ind].mean(); post = q[q.model == post_m][ind].mean()
+            rows.append(dict(modelo_post=post_m, subconjunto=sub, indicador=ind, pre=round(pre, 2), post=round(post, 2),
+                             delta=round(post - pre, 2), delta_pct=round(100 * (post - pre) / pre, 2)))
+dd = pd.DataFrame(rows); dd.to_csv(f"{OUT}/tabla_pre_post.csv", index=False); md += ["## Pre-prueba (IF) vs post-prueba (LSTM-AE, LSTM-GAN)", dd.to_markdown(index=False), ""]
 
 # 3. Pruebas inferenciales pareadas (10 semillas x n subconjuntos)
 def paired(a_model, b_model, label):
@@ -36,22 +37,23 @@ def paired(a_model, b_model, label):
         b = R[R.model == b_model].sort_values(["subset", "seed"])[ind].values
         d = b - a; sw = stats.shapiro(d)
         w = stats.wilcoxon(b, a, zero_method="wilcox"); t = stats.ttest_rel(b, a)
-        z = stats.norm.isf(w.pvalue / 2); r_eff = z / np.sqrt(len(d))
+        nz = int(np.sum(d != 0)); mu = nz * (nz + 1) / 4; sg = np.sqrt(nz * (nz + 1) * (2 * nz + 1) / 24); r_eff = abs(w.statistic - mu) / sg / np.sqrt(len(d))   # r = |Z|/sqrt(n), Z por aproximacion normal
         out.append(dict(comparacion=label, indicador=ind, n_pares=len(d), media_dif=round(d.mean(), 3), de_dif=round(d.std(ddof=1), 3),
                         shapiro_p=round(sw.pvalue, 4), wilcoxon_W=w.statistic, wilcoxon_p=w.pvalue, r_efecto=round(r_eff, 3),
                         t=round(t.statistic, 3), t_p=t.pvalue))
     return out
-inf = pd.DataFrame(paired("IsolationForest", "LSTM-GAN", "LSTM-GAN vs IF") + paired("LSTM-AE", "LSTM-GAN", "LSTM-GAN vs LSTM-AE (ablacion)"))
+inf = pd.DataFrame(paired("IsolationForest", "LSTM-AE", "LSTM-AE vs IF (H1, H2)") + paired("LSTM-AE", "LSTM-GAN", "LSTM-GAN vs LSTM-AE (H3)") + paired("IsolationForest", "LSTM-GAN", "LSTM-GAN vs IF"))
 ps = []                                                         # por subconjunto (10 pares cada uno)
-for sub in SUBS:
-    for ind in IND:
-        a = R[(R.subset == sub) & (R.model == "IsolationForest")].sort_values("seed")[ind].values
-        b = R[(R.subset == sub) & (R.model == "LSTM-GAN")].sort_values("seed")[ind].values
-        w = stats.wilcoxon(b, a) if np.any(b != a) else None
-        ps.append(dict(subconjunto=sub, indicador=ind, media_IF=round(a.mean(), 2), media_GAN=round(b.mean(), 2),
-                       wilcoxon_W=None if w is None else w.statistic, p=None if w is None else round(w.pvalue, 4)))
+for am, bm in [("IsolationForest", "LSTM-AE"), ("LSTM-AE", "LSTM-GAN"), ("IsolationForest", "LSTM-GAN")]:
+    for sub in SUBS:
+        for ind in IND:
+            a = R[(R.subset == sub) & (R.model == am)].sort_values("seed")[ind].values
+            b = R[(R.subset == sub) & (R.model == bm)].sort_values("seed")[ind].values
+            w = stats.wilcoxon(b, a) if np.any(b != a) else None
+            ps.append(dict(comparacion=f"{bm} vs {am}", subconjunto=sub, indicador=ind, media_a=round(a.mean(), 2), media_b=round(b.mean(), 2),
+                           wilcoxon_W=None if w is None else w.statistic, p=None if w is None else round(w.pvalue, 4)))
 ps = pd.DataFrame(ps); ps.to_csv(f"{OUT}/tabla_inferencial_por_subconjunto.csv", index=False)
-inf.to_csv(f"{OUT}/tabla_inferencial.csv", index=False); md += ["## Pruebas pareadas", inf.to_markdown(index=False), "", "## Wilcoxon por subconjunto (IF vs LSTM-GAN)", ps.to_markdown(index=False), ""]
+inf.to_csv(f"{OUT}/tabla_inferencial.csv", index=False); md += ["## Pruebas pareadas", inf.to_markdown(index=False), "", "## Wilcoxon por subconjunto", ps.to_markdown(index=False), ""]
 
 # 4. Bootstrap de la diferencia de AUC a nivel de ventana (puntuaciones promediadas sobre semillas)
 S = {}
@@ -73,17 +75,19 @@ for sub in SUBS:
                 sc = S[(sub, sd, m)]; thr = np.percentile(sc[va], pc); p = sc[te] > thr; yy = y[te]
                 f1s.append(100 * f1_score(yy, p, zero_division=0)); fprs.append(100 * (p & (yy == 0)).sum() / (yy == 0).sum()); rs.append(100 * (p & (yy == 1)).sum() / max(1, yy.sum()))
             sens.append(dict(subconjunto=sub, modelo=m, percentil=pc, F1=round(np.mean(f1s), 2), FPR=round(np.mean(fprs), 2), Recall=round(np.mean(rs), 2)))
-    yt = y[te]; idx = np.arange(te.sum()); diffs = []
-    for _ in range(2000):
-        bi = rng.choice(idx, len(idx));
-        if yt[bi].min() == yt[bi].max(): continue
-        diffs.append(roc_auc_score(yt[bi], avg["LSTM-GAN"][te][bi]) - roc_auc_score(yt[bi], avg["IsolationForest"][te][bi]))
-    lo, hi = np.percentile(diffs, [2.5, 97.5])
-    boot.append(dict(subconjunto=sub, auc_IF=round(100 * roc_auc_score(yt, avg["IsolationForest"][te]), 2),
-                     auc_GAN=round(100 * roc_auc_score(yt, avg["LSTM-GAN"][te]), 2), dif=round(100 * np.mean(diffs), 2),
-                     IC95_inf=round(100 * lo, 2), IC95_sup=round(100 * hi, 2)))
+    yt = y[te]; idx = np.arange(te.sum())
+    for am, bm in [("IsolationForest", "LSTM-AE"), ("LSTM-AE", "LSTM-GAN")]:
+        diffs = []
+        for _ in range(2000):
+            bi = rng.choice(idx, len(idx))
+            if yt[bi].min() == yt[bi].max(): continue
+            diffs.append(roc_auc_score(yt[bi], avg[bm][te][bi]) - roc_auc_score(yt[bi], avg[am][te][bi]))
+        lo, hi = np.percentile(diffs, [2.5, 97.5])
+        boot.append(dict(comparacion=f"{bm} - {am}", subconjunto=sub, auc_a=round(100 * roc_auc_score(yt, avg[am][te]), 2),
+                         auc_b=round(100 * roc_auc_score(yt, avg[bm][te]), 2), dif=round(100 * np.mean(diffs), 2),
+                         IC95_inf=round(100 * lo, 2), IC95_sup=round(100 * hi, 2)))
 sn = pd.DataFrame(sens); sn.to_csv(f"{OUT}/tabla_sensibilidad_umbral.csv", index=False); md += ["## Sensibilidad al umbral (media de semillas)", sn.to_markdown(index=False), ""]
-bt = pd.DataFrame(boot); bt.to_csv(f"{OUT}/tabla_bootstrap_auc.csv", index=False); md += ["## Bootstrap dif. AUC (GAN - IF)", bt.to_markdown(index=False), ""]
+bt = pd.DataFrame(boot); bt.to_csv(f"{OUT}/tabla_bootstrap_auc.csv", index=False); md += ["## Bootstrap dif. AUC", bt.to_markdown(index=False), ""]
 
 # 5. Descripcion del dataset
 dsr = []
@@ -122,13 +126,13 @@ for ax, sub in zip(axs, SUBS):
     ax.legend(frameon=False, fontsize=7, loc="lower right")
 fig.tight_layout(); fig.savefig(f"{FIG}/fig2_roc.png", dpi=200); plt.close()
 
-# Fig. 3: puntuacion S(X) del LSTM-GAN en el tramo de prueba, umbral y ventanas etiquetadas como maliciosas
+# Fig. 3: puntuacion del LSTM-AE en el tramo de prueba, umbral y ventanas etiquetadas como maliciosas
 fig, axs = plt.subplots(len(SUBS), 1, figsize=(10, 2.5 * len(SUBS)))
 for ax, sub in zip(axs, SUBS):
-    yt, _, labt, thr = roc_data[sub]; s, rho = thr["LSTM-GAN"]
+    yt, _, labt, thr = roc_data[sub]; s, rho = thr["LSTM-AE"]
     t = labt.win.reset_index(drop=True); seg = (t.diff() > pd.Timedelta("30min")).cumsum()   # no unir huecos sin registros
     for i, g in enumerate(seg.unique()):
-        k = (seg == g).values; ax.plot(t[k], s[k], color=COL["LSTM-GAN"], lw=0.8, label="S(X) LSTM-GAN" if i == 0 else None)
+        k = (seg == g).values; ax.plot(t[k], s[k], color=COL["LSTM-AE"], lw=0.8, label="Puntuación LSTM-AE" if i == 0 else None)
     ax.axhline(rho, color=INK2, ls="--", lw=1, label="Umbral ρ (P95 validación)")
     ax.scatter(labt.win[yt == 1], s[yt == 1], color="#d03b3b", s=10, zorder=3, marker="x", label="Ventana maliciosa (etiqueta débil)")
     ax.set_title(sub, color=INK, fontsize=9); ax.set_ylabel("Puntuación"); loc = mdates.AutoDateLocator(maxticks=8); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc)); ax.set_ylim(0, 1.25); ax.legend(frameon=False, fontsize=7, loc="upper left", ncol=3)
